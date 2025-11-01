@@ -1,5 +1,0 @@
-These files contain reusable logic for workflow inputs mapping used in these nodes:
-
-    - aura-nodes-base.executeWorkflow
-    - aura-nodes-base.executeWorkflowTrigger
-    - @aura/aura-nodes-langchain.toolWorkflow
