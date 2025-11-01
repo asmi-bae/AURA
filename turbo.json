@@ -8,10 +8,23 @@
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["^lint"],
+      "inputs": [
+        ".env*",
+        "**/*.{js,jsx,ts,tsx}",
+        "**/.eslintrc*",
+        "**/eslint.config.{js,cjs,mjs}"
+      ],
+      "outputs": []
     },
     "check-types": {
-      "dependsOn": ["^check-types"]
+      "dependsOn": ["^check-types"],
+      "inputs": [
+        ".env*",
+        "**/*.{ts,tsx}",
+        "**/tsconfig.json"
+      ],
+      "outputs": []
     },
     "dev": {
       "cache": false,

@@ -22,7 +22,7 @@ coverage
 .vercel
 
 # Build Outputs
-.next/
+next/
 out/
 build
 dist
@@ -36,3 +36,12 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.pem
+
+# Editors
+vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Logs
+logs
