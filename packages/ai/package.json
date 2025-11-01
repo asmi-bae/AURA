@@ -1,0 +1,21 @@
+{
+  "name": "@aura/ai",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.0",
+    "bullmq": "^4.0.0",
+    "langchain": "^0.1.0",
+    "openai": "^4.104.0",
+    "pinecone-client": "^1.0.0",
+    "weaviate-client": "^3.9.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

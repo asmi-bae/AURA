@@ -1,0 +1,8 @@
+{
+  "name": "@aura/webhook-handler",
+  "version": "0.0.1",
+  "scripts": {
+    "build": "echo \"Build not implemented yet\"",
+    "start": "echo \"Start not implemented yet\""
+  }
+}

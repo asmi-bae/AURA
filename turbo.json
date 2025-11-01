@@ -29,6 +29,15 @@
     "dev": {
       "cache": false,
       "persistent": true
+    },
+    "#build-service": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".env*"],
+      "outputs": ["dist/**"]
+    },
+    "#dev-service": {
+      "cache": false,
+      "persistent": true
     }
   }
 }
