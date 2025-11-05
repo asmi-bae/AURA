@@ -8,7 +8,8 @@
     "dev": "electron . --dev",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
-    "build:linux": "electron-builder --linux"
+    "build:linux": "electron-builder --linux",
+    "lint:security": "electron-builder --check"
   },
   "dependencies": {
     "@aura/utils": "workspace:*",
@@ -34,6 +35,7 @@
     "files": [
       "dist/**/*",
       "main.js",
+      "preload.js",
       "index.html",
       "package.json"
     ],

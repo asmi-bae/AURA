@@ -78,27 +78,41 @@
   </div>
 
   <script>
-    const { ipcRenderer } = require('electron');
-    const os = require('os');
+    // Wait for electronAPI to be available (from preload.js)
+    if (window.electronAPI) {
+      // Update platform info using secure API
+      const platform = window.electronAPI.getPlatform();
+      const release = window.electronAPI.getRelease();
+      const version = window.electronAPI.getElectronVersion();
+      const serverUrl = window.electronAPI.getServerUrl();
 
-    // Update platform info
-    document.getElementById('platform').textContent = `${os.platform()} ${os.release()}`;
-    document.getElementById('version').textContent = process.versions.electron;
-    document.getElementById('server-url').textContent = process.env.AURA_SERVER_URL || 'http://localhost:3001';
+      document.getElementById('platform').textContent = `${platform} ${release}`;
+      document.getElementById('version').textContent = version;
+      document.getElementById('server-url').textContent = serverUrl;
 
-    // Listen for connection status updates
-    ipcRenderer.on('connection-status', (event, data) => {
-      const statusDiv = document.getElementById('status');
-      const statusText = document.getElementById('status-text');
-      
-      if (data.connected) {
-        statusDiv.className = 'status connected';
-        statusText.textContent = 'Connected';
-      } else {
-        statusDiv.className = 'status disconnected';
-        statusText.textContent = 'Disconnected';
-      }
-    });
+      // Listen for connection status updates using secure API
+      window.electronAPI.onConnectionStatus((data) => {
+        const statusDiv = document.getElementById('status');
+        const statusText = document.getElementById('status-text');
+        
+        if (data.connected) {
+          statusDiv.className = 'status connected';
+          statusText.textContent = 'Connected';
+        } else {
+          statusDiv.className = 'status disconnected';
+          statusText.textContent = 'Disconnected';
+        }
+      });
+
+      // Cleanup on page unload
+      window.addEventListener('beforeunload', () => {
+        window.electronAPI.removeConnectionStatusListener();
+      });
+    } else {
+      console.error('Electron API not available. This page should only run in Electron.');
+      // Show error message
+      document.getElementById('status-text').textContent = 'Error: Electron API not available';
+    }
   </script>
 </body>
 </html>

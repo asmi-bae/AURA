@@ -10,6 +10,7 @@
   "dependencies": {
     "@aura/utils": "workspace:*",
     "@aura/types": "workspace:*",
+    "@aura/ai": "workspace:*",
     "@aura/voice": "workspace:*",
     "robotjs": "^0.6.0",
     "nut.js": "^3.0.0",

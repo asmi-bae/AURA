@@ -147,9 +147,11 @@ function createWindow() {
     width: 800,
     height: 600,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false, // Disable for security
+      contextIsolation: true, // Enable for security
       preload: path.join(__dirname, 'preload.js'),
+      sandbox: false, // Required for preload script to work with native modules
+      enableRemoteModule: false, // Disable remote module for security
     },
     show: false, // Start hidden
   });
@@ -206,28 +208,52 @@ function createTray() {
   });
 }
 
-// IPC handlers
+// Secure IPC handlers (only expose what's needed)
 ipcMain.handle('get-screen-sources', async () => {
-  const sources = await desktopCapturer.getSources({
-    types: ['screen', 'window'],
-  });
-  return sources.map((source) => ({
-    id: source.id,
-    name: source.name,
-    thumbnail: source.thumbnail.toDataURL(),
-  }));
+  try {
+    const sources = await desktopCapturer.getSources({
+      types: ['screen', 'window'],
+    });
+    return sources.map((source) => ({
+      id: source.id,
+      name: source.name,
+      thumbnail: source.thumbnail.toDataURL(),
+    }));
+  } catch (error) {
+    logger.error('Error getting screen sources', { error });
+    return [];
+  }
 });
 
 ipcMain.handle('get-cache', async (event, key) => {
-  await lowdb.read();
-  return lowdb.data.cache[key];
+  try {
+    if (!key || typeof key !== 'string') {
+      throw new Error('Invalid cache key');
+    }
+    await lowdb.read();
+    return lowdb.data.cache[key];
+  } catch (error) {
+    logger.error('Error getting cache', { error, key });
+    return null;
+  }
 });
 
 ipcMain.handle('set-cache', async (event, key, value) => {
-  await lowdb.read();
-  lowdb.data.cache[key] = value;
-  await lowdb.write();
-  return true;
+  try {
+    if (!key || typeof key !== 'string') {
+      throw new Error('Invalid cache key');
+    }
+    // Validate value is serializable
+    JSON.stringify(value);
+    
+    await lowdb.read();
+    lowdb.data.cache[key] = value;
+    await lowdb.write();
+    return true;
+  } catch (error) {
+    logger.error('Error setting cache', { error, key });
+    return false;
+  }
 });
 
 // App lifecycle
