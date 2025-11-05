@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "@types/node": "^20.12.7",
-    "@types/robotjs": "^0.6.10",
     "@types/ws": "^8.5.10",
     "typescript": "^5.4.5"
   }
