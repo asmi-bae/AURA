@@ -100,6 +100,10 @@ export class PluginLoader {
     return this.plugins.get(name);
   }
 
+  getAllPlugins(): AuraPlugin[] {
+    return Array.from(this.plugins.values());
+  }
+
   private isAuraPlugin(obj: any): obj is AuraPlugin {
     return 'name' in obj && 'init' in obj && 'execute' in obj;
   }

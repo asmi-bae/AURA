@@ -1,0 +1,32 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY services/collaboration/package.json ./services/collaboration/
+
+RUN npm install -g pnpm@10.0.0
+RUN pnpm install --frozen-lockfile
+
+COPY services/collaboration ./services/collaboration
+COPY tsconfig.base.json ./
+
+RUN pnpm --filter @aura/collaboration build
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY services/collaboration/package.json ./services/collaboration/
+
+RUN npm install -g pnpm@10.0.0
+RUN pnpm install --frozen-lockfile --prod
+
+COPY --from=builder /app/services/collaboration/dist ./services/collaboration/dist
+COPY --from=builder /app/services/collaboration/package.json ./services/collaboration/
+
+EXPOSE 3005
+
+CMD ["node", "services/collaboration/dist/index.js"]
+

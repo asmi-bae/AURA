@@ -1,0 +1,68 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/core/package.json ./packages/core/
+COPY packages/db/package.json ./packages/db/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/types/package.json ./packages/types/
+COPY services/workflow-engine/package.json ./services/workflow-engine/
+
+# Install pnpm
+RUN npm install -g pnpm@10.0.0
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source files
+COPY packages/core ./packages/core
+COPY packages/db ./packages/db
+COPY packages/utils ./packages/utils
+COPY packages/types ./packages/types
+COPY services/workflow-engine ./services/workflow-engine
+COPY tsconfig.base.json ./
+
+# Build
+RUN pnpm --filter @aura/core build
+RUN pnpm --filter @aura/db build
+RUN pnpm --filter @aura/utils build
+RUN pnpm --filter @aura/types build
+RUN pnpm --filter @aura/workflow-engine build
+
+# Production image
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/core/package.json ./packages/core/
+COPY packages/db/package.json ./packages/db/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/types/package.json ./packages/types/
+COPY services/workflow-engine/package.json ./services/workflow-engine/
+
+# Install pnpm
+RUN npm install -g pnpm@10.0.0
+
+# Install production dependencies only
+RUN pnpm install --frozen-lockfile --prod
+
+# Copy built files
+COPY --from=builder /app/packages/core/dist ./packages/core/dist
+COPY --from=builder /app/packages/core/package.json ./packages/core/
+COPY --from=builder /app/packages/db/dist ./packages/db/dist
+COPY --from=builder /app/packages/db/package.json ./packages/db/
+COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
+COPY --from=builder /app/packages/utils/package.json ./packages/utils/
+COPY --from=builder /app/packages/types/dist ./packages/types/dist
+COPY --from=builder /app/packages/types/package.json ./packages/types/
+COPY --from=builder /app/services/workflow-engine/dist ./services/workflow-engine/dist
+COPY --from=builder /app/services/workflow-engine/package.json ./services/workflow-engine/
+
+EXPOSE 3001
+
+CMD ["node", "services/workflow-engine/dist/index.js"]
+

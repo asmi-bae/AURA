@@ -8,12 +8,16 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
+    "@aura/types": "workspace:*",
+    "@aura/utils": "workspace:*",
+    "@aura/ai": "workspace:*",
     "@types/chokidar": "^2.1.7",
-    "bullmq": "^4.0.0",
+    "bullmq": "^4.18.3",
     "chokidar": "^4.0.3",
     "express-rate-limit": "^8.2.1",
-    "n8n-core": "^1.0.0",
-    "n8n-workflow": "^1.0.0",
+    "ioredis": "^5.8.2",
+    "n8n-core": "^1.117.0",
+    "n8n-workflow": "^1.115.0",
     "vm2": "^3.10.0"
   },
   "devDependencies": {

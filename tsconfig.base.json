@@ -11,6 +11,7 @@
     "paths": {
       "@aura/*": ["packages/*/src"]
     },
+    "types": ["node"],
     "lib": ["ES2015", "DOM"]
   }
 }

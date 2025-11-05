@@ -1,0 +1,26 @@
+{
+  "name": "@aura/voice",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@aura/utils": "workspace:*",
+    "@aura/types": "workspace:*",
+    "openai": "^4.104.0",
+    "elevenlabs-node": "^1.0.0",
+    "@google-cloud/text-to-speech": "^5.0.0",
+    "vosk": "^0.3.0",
+    "mediasoup": "^3.12.0",
+    "wav": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "@types/wav": "^1.0.5",
+    "typescript": "^5.4.5"
+  }
+}
+

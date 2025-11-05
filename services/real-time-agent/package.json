@@ -1,22 +1,53 @@
 {
   "name": "@aura/real-time-agent",
   "version": "0.0.1",
+  "main": "main.js",
   "scripts": {
-    "build": "echo \"Build not implemented yet\"",
-    "start": "electron ."
+    "build": "tsc",
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux"
   },
   "dependencies": {
+    "@aura/utils": "workspace:*",
+    "@aura/types": "workspace:*",
     "electron": "^30.5.1",
-    "elevenlabs-node": "^1.0.0",
-    "google-tts-api": "^2.0.0",
-    "lowdb": "^5.0.0",
-    "mediasoup": "^3.0.0",
-    "microsoft-cognitiveservices-speech-sdk": "^1.0.0",
-    "obs-websocket-js": "^5.0.0",
+    "socket.io-client": "^4.7.2",
     "robotjs": "^0.6.0",
-    "socket.io": "^4.0.0",
-    "sqlite3": "^5.0.0",
-    "vosk": "^0.3.0",
-    "webrtc": "^1.0.0"
+    "sqlite3": "^5.1.7",
+    "lowdb": "^7.0.0",
+    "better-sqlite3": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "electron-builder": "^24.13.3",
+    "typescript": "^5.4.5"
+  },
+  "build": {
+    "appId": "com.aura.realtimeagent",
+    "productName": "AURA Real-Time Agent",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "index.html",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "icon.png"
+    }
   }
 }

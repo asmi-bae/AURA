@@ -1,0 +1,44 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/types/package.json ./packages/types/
+COPY services/notification/package.json ./services/notification/
+
+RUN npm install -g pnpm@10.0.0
+RUN pnpm install --frozen-lockfile
+
+COPY packages/utils ./packages/utils
+COPY packages/types ./packages/types
+COPY services/notification ./services/notification
+COPY tsconfig.base.json ./
+
+RUN pnpm --filter @aura/utils build
+RUN pnpm --filter @aura/types build
+RUN pnpm --filter @aura/notification build
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/types/package.json ./packages/types/
+COPY services/notification/package.json ./services/notification/
+
+RUN npm install -g pnpm@10.0.0
+RUN pnpm install --frozen-lockfile --prod
+
+COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
+COPY --from=builder /app/packages/utils/package.json ./packages/utils/
+COPY --from=builder /app/packages/types/dist ./packages/types/dist
+COPY --from=builder /app/packages/types/package.json ./packages/types/
+COPY --from=builder /app/services/notification/dist ./services/notification/dist
+COPY --from=builder /app/services/notification/package.json ./services/notification/
+
+EXPOSE 3004
+
+CMD ["node", "services/notification/dist/index.js"]
+

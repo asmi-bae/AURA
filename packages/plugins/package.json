@@ -8,7 +8,10 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@aura/core": "workspace:*"
+    "@aura/core": "workspace:*",
+    "@slack/client": "^5.0.2",
+    "googleapis": "^128.0.0",
+    "@octokit/rest": "^20.0.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
