@@ -1,6 +1,6 @@
 import cron from 'node-cron';
 import { AuraWorkflowEngine } from '@aura/core';
-import { initializeDataSource, Workflow } from '@aura/db';
+import { initializeDataSource, AppDataSource, Workflow } from '@aura/db';
 import { createLogger } from '@aura/utils';
 import Redis from 'ioredis';
 import crypto from 'crypto';
@@ -35,17 +35,18 @@ const scheduledWorkflows = new Map<string, ScheduledWorkflow>();
 // Load and schedule workflows from database
 async function loadScheduledWorkflows() {
   try {
-    const workflows = await Workflow.find({
+    const workflowRepo = AppDataSource.getRepository(Workflow);
+    const workflows = await workflowRepo.find({
       where: {
-        active: true,
-      },
+        status: 'active',
+      } as any,
     });
 
     for (const workflow of workflows) {
       // Check if workflow has cron schedule in settings
       const schedule = (workflow.settings as any)?.schedule;
       if (schedule && typeof schedule === 'string') {
-        scheduleWorkflow(workflow.id, schedule);
+        scheduleWorkflow(workflow.id.toString(), schedule);
       }
     }
 

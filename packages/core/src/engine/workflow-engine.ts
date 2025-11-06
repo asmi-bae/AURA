@@ -20,7 +20,6 @@ import { Queue, Worker, Job, QueueOptions, WorkerOptions } from 'bullmq';
 import Redis from 'ioredis';
 import { createLogger } from '@aura/utils';
 import { PluginLoader } from '../plugin-loader';
-import { AuraPlugin } from '@aura/plugins';
 import { WorkflowCache } from '../cache/workflow-cache';
 import { ExecutionMetrics } from '../metrics/execution-metrics';
 import { WorkflowRepository } from '../database/workflow-repository';
@@ -84,7 +83,7 @@ export class AuraWorkflowEngine {
   private workflowRepo: WorkflowRepository | null = null;
   private executionLogRepo: ExecutionLogRepository | null = null;
   private logger = createLogger();
-  private config: Required<WorkflowEngineConfig>;
+  private config: Required<Omit<WorkflowEngineConfig, 'dbConnection'>> & { dbConnection?: Connection };
   private isInitialized = false;
 
   constructor(config: WorkflowEngineConfig) {
@@ -96,7 +95,7 @@ export class AuraWorkflowEngine {
     // Set defaults and merge config
     this.config = {
       redisConnection: config.redisConnection,
-      dbConnection: config.dbConnection,
+      ...(config.dbConnection && { dbConnection: config.dbConnection }),
       pluginsDir: config.pluginsDir || './plugins',
       watchPlugins: config.watchPlugins ?? true,
       queueConfig: config.queueConfig || {},
@@ -105,7 +104,7 @@ export class AuraWorkflowEngine {
       enableCache: config.enableCache ?? true,
       cacheTTL: config.cacheTTL || 300, // 5 minutes
       enableMetrics: config.enableMetrics ?? true,
-    };
+    } as Required<Omit<WorkflowEngineConfig, 'dbConnection'>> & { dbConnection?: Connection };
 
     // Initialize queue
     this.queue = new Queue('workflow-execution', {

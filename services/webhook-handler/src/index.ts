@@ -82,7 +82,8 @@ app.post('/webhooks/register', async (req, res) => {
 
     // Create dynamic route
     const webhookPath = `/webhook${webhookConfig.path}`;
-    app[method.toLowerCase()](webhookPath, async (req, res) => {
+    const methodLower = method.toLowerCase() as 'get' | 'post' | 'put' | 'delete';
+    (app[methodLower] as any)(webhookPath, async (req: express.Request, res: express.Response) => {
       try {
         // Verify signature if secret is provided
         if (webhookConfig.secret) {
