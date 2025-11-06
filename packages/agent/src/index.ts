@@ -7,11 +7,12 @@
  * @module @aura/agent
  */
 
-// Core
+// Core (exports AgentConfig, AgentStatus from core)
 export * from './core';
 
-// Types
-export * from './types';
+// Types (only export types not in core)
+export * from './types/agent-types';
+export * from './types/capabilities';
 
 // Engine
 export * from './engine';
@@ -19,8 +20,8 @@ export * from './engine';
 // Capabilities
 export * from './capabilities';
 
-// Security
-export * from './security';
+// Security (exports KeyPair from security-manager, not security.ts)
+export { SecurityManager, type KeyPair } from './security/security-manager';
 
 // Consent
 export * from './consent';
@@ -37,4 +38,3 @@ export * from './telemetry';
 // Legacy (for backward compatibility)
 export * from './legacy/automation';
 export * from './legacy/screencapture';
-export * from './security/security-manager';

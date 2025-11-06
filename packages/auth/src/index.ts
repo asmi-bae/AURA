@@ -1,5 +1,5 @@
 export * from './jwt';
-export * from './oauth';
+// OAuth exports - prefer oauth-complete over oauth
 export * from './oauth-complete';
 export * from './rbac';
 export * from './types';

@@ -47,7 +47,7 @@ export class ModelRouter {
   async init(): Promise<void> {
     logger.info('Model router initialized', {
       hasRegistry: !!this.modelRegistry,
-      offlineMode: this.config.offlineMode,
+      offlineMode: this.config.offlineMode ?? false,
     });
   }
 

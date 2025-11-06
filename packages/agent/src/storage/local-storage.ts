@@ -164,7 +164,7 @@ export class LocalStorage {
     const iv = crypto.randomBytes(this.ivLength);
     const cipher = crypto.createCipheriv(this.algorithm, this.config.encryptionKey, iv);
     const encrypted = Buffer.concat([cipher.update(data), cipher.final()]);
-    const authTag = cipher.getAuthTag();
+    const authTag = (cipher as any).getAuthTag();
     return Buffer.concat([iv, authTag, encrypted]);
   }
 
@@ -176,7 +176,7 @@ export class LocalStorage {
     const authTag = encrypted.slice(this.ivLength, this.ivLength + 16);
     const data = encrypted.slice(this.ivLength + 16);
     const decipher = crypto.createDecipheriv(this.algorithm, this.config.encryptionKey, iv);
-    decipher.setAuthTag(authTag);
+    (decipher as any).setAuthTag(authTag);
     return Buffer.concat([decipher.update(data), decipher.final()]);
   }
 

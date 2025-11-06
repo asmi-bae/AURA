@@ -81,7 +81,7 @@ export class SecurityManager {
 
     const dataBuffer = Buffer.isBuffer(data) ? data : Buffer.from(data, 'utf8');
     const encrypted = Buffer.concat([cipher.update(dataBuffer), cipher.final()]);
-    const authTag = cipher.getAuthTag();
+    const authTag = (cipher as any).getAuthTag();
 
     return { encrypted, iv, authTag };
   }
@@ -97,7 +97,7 @@ export class SecurityManager {
   ): Buffer {
     const keyToUse = key || this.encryptionKey;
     const decipher = crypto.createDecipheriv(this.algorithm, keyToUse, iv);
-    decipher.setAuthTag(authTag);
+    (decipher as any).setAuthTag(authTag);
 
     return Buffer.concat([decipher.update(encrypted), decipher.final()]);
   }

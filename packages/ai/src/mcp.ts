@@ -1,4 +1,4 @@
-import { Queue, Worker } from 'bullmq';
+import { Queue, Worker, QueueEvents } from 'bullmq';
 import { createLogger } from '@aura/utils';
 
 export interface MCPMessage {
@@ -29,11 +29,13 @@ export interface MCPTool {
 export class MCP {
   private queue: Queue;
   private worker?: Worker;
+  private queueEvents?: QueueEvents;
   private tools: Map<string, MCPTool> = new Map();
   private logger = createLogger();
 
   constructor(private redisConnection: any, private queueName: string = 'mcp-tasks') {
     this.queue = new Queue(queueName, { connection: redisConnection });
+    this.queueEvents = new QueueEvents(queueName, { connection: redisConnection });
   }
 
   registerTool(tool: MCPTool): void {
@@ -51,7 +53,11 @@ export class MCP {
       })),
     });
 
-    const result = await job.waitUntilFinished(this.worker?.waitUntilReady() || Promise.resolve());
+    if (!this.worker || !this.queueEvents) {
+      throw new Error('Worker or QueueEvents not initialized');
+    }
+    await this.worker.waitUntilReady();
+    const result = await job.waitUntilFinished(this.queueEvents);
     return result;
   }
 

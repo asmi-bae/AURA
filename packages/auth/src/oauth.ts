@@ -1,3 +1,4 @@
+// @ts-ignore - passport-google-oauth20 doesn't have types
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import passport from 'passport';
 import { JWTService } from './jwt';
@@ -25,7 +26,7 @@ export class OAuthService {
           clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
           callbackURL: process.env.GOOGLE_CALLBACK_URL || '/auth/google/callback',
         },
-        async (accessToken, refreshToken, profile, done) => {
+        async (accessToken: string, refreshToken: string, profile: any, done: (error: any, user?: any) => void) => {
           const user: OAuthUser = {
             id: profile.id,
             email: profile.emails?.[0]?.value || '',

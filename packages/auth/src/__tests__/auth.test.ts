@@ -4,6 +4,7 @@ import { CredentialsService } from '../credentials';
 import { TwoFactorService } from '../two-factor';
 import { SecurityService } from '../security';
 import { RBACService } from '../rbac';
+// @ts-ignore - speakeasy doesn't have types
 import speakeasy from 'speakeasy';
 
 describe('Auth Service', () => {

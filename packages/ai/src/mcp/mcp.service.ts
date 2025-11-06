@@ -13,7 +13,7 @@
  * @module @aura/ai/mcp
  */
 
-import { Queue, Worker } from 'bullmq';
+import { Queue, Worker, QueueEvents } from 'bullmq';
 import { createLogger } from '@aura/utils';
 
 const logger = createLogger();
@@ -70,6 +70,7 @@ export interface ToolExecutionResult {
 export class MCPService {
   private queue: Queue;
   private worker?: Worker;
+  private queueEvents?: QueueEvents;
   private tools: Map<string, MCPTool> = new Map();
   private logger = createLogger();
 
@@ -93,6 +94,8 @@ export class MCPService {
         },
       },
     });
+
+    this.queueEvents = new QueueEvents(queueName, { connection: redisConnection });
 
     this.logger.info('MCP service initialized', { queueName: this.queueName });
   }
@@ -171,9 +174,11 @@ export class MCPService {
         }
       );
 
-      const result = await job.waitUntilFinished(
-        this.worker?.waitUntilReady() || Promise.resolve()
-      );
+      if (!this.worker || !this.queueEvents) {
+        throw new Error('Worker or QueueEvents not initialized');
+      }
+      await this.worker.waitUntilReady();
+      const result = await job.waitUntilFinished(this.queueEvents);
 
       return result;
     } catch (error) {

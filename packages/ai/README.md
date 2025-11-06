@@ -161,3 +161,15 @@ const results = await orchestrator.coordinateTask(
 
 See individual module documentation for detailed API reference.
 
+### Architecture Documentation
+
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** - Complete AI model architecture and integration plan
+- **[MODEL_REGISTRY.md](./MODEL_REGISTRY.md)** - Model registry and routing specification
+- **[INTEGRATION_GUIDE.md](./INTEGRATION_GUIDE.md)** - Integration patterns and examples
+
+### Quick Links
+
+- **Model Types**: 7 primary model classes (Reasoning, Embedding, RAG, Multimodal, Voice, Action, Supervisor)
+- **Model Registry**: Central system for managing and routing models
+- **Integration**: How to integrate with `@aura/agent`, `@aura/core`, and other packages
+

@@ -9,10 +9,14 @@ export interface JWTPayload {
 }
 
 export class JWTService {
-  constructor(private secret: string = process.env.JWT_SECRET || 'aura-secret-key') {}
+  constructor(private secret: string = process.env.JWT_SECRET || 'aura-secret-key') {
+    if (!secret || secret.length < 32) {
+      throw new Error('JWT secret must be at least 32 characters');
+    }
+  }
 
   sign(payload: Omit<JWTPayload, 'iat' | 'exp'>, expiresIn: string = '7d'): string {
-    return jwt.sign(payload, this.secret, { expiresIn });
+    return jwt.sign(payload, this.secret, { expiresIn } as any);
   }
 
   verify(token: string): JWTPayload {

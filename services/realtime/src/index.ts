@@ -1,7 +1,9 @@
 import express from 'express';
 import http from 'http';
 import { Server } from 'socket.io';
-import { createWorker, Worker } from 'mediasoup';
+// @ts-ignore - mediasoup Worker type not exported
+import { createWorker } from 'mediasoup';
+type Worker = any; // mediasoup Worker type
 import { createLogger } from '@aura/utils';
 import Redis from 'ioredis';
 
@@ -103,22 +105,22 @@ io.on('connection', (socket) => {
         dtlsParameters: transport.dtlsParameters,
       });
 
-      transport.on('connect', async ({ dtlsParameters }, callback) => {
+      transport.on('connect', async ({ dtlsParameters }: any, callback: (error?: Error) => void) => {
         try {
           await transport.connect({ dtlsParameters });
           callback();
         } catch (error) {
-          callback(error);
+          callback(error as Error);
         }
       });
 
-      transport.on('produce', async ({ kind, rtpParameters }, callback) => {
+      transport.on('produce', async ({ kind, rtpParameters }: any, callback: (error?: Error, data?: any) => void) => {
         try {
           const producer = await transport.produce({ kind, rtpParameters });
-          callback(null, { id: producer.id });
+          callback(undefined, { id: producer.id });
           socket.emit('producer-created', { id: producer.id, kind });
         } catch (error) {
-          callback(error);
+          callback(error as Error);
         }
       });
     } catch (error) {

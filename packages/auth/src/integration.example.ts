@@ -3,17 +3,23 @@
  * 
  * This file demonstrates how to use the enhanced auth service
  * with all OAuth providers and credential-based authentication.
+ * 
+ * NOTE: This is an example file. For actual usage, uncomment the Express code
+ * and ensure Express is installed in your project.
  */
 
+// Example Express setup (uncomment when using Express)
+/*
 import express from 'express';
+const app = express();
+app.use(express.json());
+*/
+
 import { OAuthService } from './oauth-complete';
 import { CredentialsService } from './credentials';
 import { TwoFactorService } from './two-factor';
 import { SecurityService } from './security';
 import { RBACService } from './rbac';
-
-const app = express();
-app.use(express.json());
 
 // Initialize services
 const oauthService = new OAuthService({
@@ -47,6 +53,8 @@ const twoFactorService = new TwoFactorService('AURA');
 const securityService = new SecurityService();
 const rbacService = new RBACService();
 
+// Example usage (uncomment when using Express):
+/*
 // Apply security middleware
 app.use(securityService.getHelmetMiddleware());
 app.use(securityService.getRateLimiter());
@@ -54,35 +62,35 @@ app.use(securityService.getSlowDown());
 
 // OAuth Routes
 app.get('/auth/google', oauthService.getAuthMiddleware('google'));
-app.get('/auth/google/callback', oauthService.getCallbackMiddleware('google'), (req, res) => {
+app.get('/auth/google/callback', oauthService.getCallbackMiddleware('google'), (req: any, res: any) => {
   const user = req.user as any;
   const token = oauthService.generateToken(user);
   res.json({ token, user });
 });
 
 app.get('/auth/github', oauthService.getAuthMiddleware('github'));
-app.get('/auth/github/callback', oauthService.getCallbackMiddleware('github'), (req, res) => {
+app.get('/auth/github/callback', oauthService.getCallbackMiddleware('github'), (req: any, res: any) => {
   const user = req.user as any;
   const token = oauthService.generateToken(user);
   res.json({ token, user });
 });
 
 app.get('/auth/microsoft', oauthService.getAuthMiddleware('microsoft'));
-app.get('/auth/microsoft/callback', oauthService.getCallbackMiddleware('microsoft'), (req, res) => {
+app.get('/auth/microsoft/callback', oauthService.getCallbackMiddleware('microsoft'), (req: any, res: any) => {
   const user = req.user as any;
   const token = oauthService.generateToken(user);
   res.json({ token, user });
 });
 
 app.get('/auth/apple', oauthService.getAuthMiddleware('apple'));
-app.get('/auth/apple/callback', oauthService.getCallbackMiddleware('apple'), (req, res) => {
+app.get('/auth/apple/callback', oauthService.getCallbackMiddleware('apple'), (req: any, res: any) => {
   const user = req.user as any;
   const token = oauthService.generateToken(user);
   res.json({ token, user });
 });
 
 // Credentials Routes
-app.post('/auth/register', async (req, res) => {
+app.post('/auth/register', async (req: any, res: any) => {
   const { email, password } = req.body;
 
   if (!securityService.validateEmail(email)) {
@@ -98,7 +106,7 @@ app.post('/auth/register', async (req, res) => {
   }
 });
 
-app.post('/auth/login', async (req, res) => {
+app.post('/auth/login', async (req: any, res: any) => {
   const { email, password } = req.body;
 
   // In production, fetch user from database
@@ -127,7 +135,7 @@ app.post('/auth/login', async (req, res) => {
 });
 
 // 2FA Routes
-app.post('/auth/2fa/setup', async (req, res) => {
+app.post('/auth/2fa/setup', async (req: any, res: any) => {
   const { email } = req.body;
   const { secret, qrCode } = twoFactorService.generateSecret(email);
   const qrCodeDataUrl = await twoFactorService.generateQRCode(qrCode);
@@ -136,17 +144,17 @@ app.post('/auth/2fa/setup', async (req, res) => {
   res.json({ secret, qrCode: qrCodeDataUrl, backupCodes });
 });
 
-app.post('/auth/2fa/verify', async (req, res) => {
+app.post('/auth/2fa/verify', async (req: any, res: any) => {
   const { token, secret } = req.body;
   const isValid = twoFactorService.verifyToken(token, secret);
   res.json({ valid: isValid });
 });
 
 // Protected route example with RBAC
-app.get('/api/workflows', (req, res) => {
+app.get('/api/workflows', (req: any, res: any) => {
   // In production, extract user from JWT token
   const userRoles = ['user']; // Mock roles
-  const hasPermission = rbacService.hasPermission(userRoles, 'workflow', 'read');
+  const hasPermission = rbacService.hasPermission(userRoles as any, 'workflow', 'read');
 
   if (hasPermission) {
     res.json({ workflows: [] });
@@ -156,4 +164,4 @@ app.get('/api/workflows', (req, res) => {
 });
 
 export default app;
-
+*/

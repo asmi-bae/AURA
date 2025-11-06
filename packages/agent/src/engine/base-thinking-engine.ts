@@ -51,6 +51,8 @@ export interface ThinkingEngineConfig {
   enableLocalLLM?: boolean;
   /** Learning loop enabled */
   enableLearning?: boolean;
+  /** Offline mode */
+  offlineMode?: boolean;
 }
 
 /**
@@ -128,7 +130,7 @@ export class BaseThinkingEngine extends EventEmitter {
     this.modelRouter = new ModelRouter({
       modelRegistry: config.modelRegistry,
       enableLocalLLM: config.enableLocalLLM ?? true,
-      offlineMode: config.capabilities.offlineMode ?? false,
+      offlineMode: config.offlineMode ?? false,
     });
 
     this.toolManager = new ToolManager({

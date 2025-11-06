@@ -15,6 +15,7 @@
 
 import { ModelRegistry } from './model-registry';
 import { createLogger } from '@aura/utils';
+import { ModelProvider } from '../types';
 import { GPTService } from '../models/gpt';
 import { ClaudeService } from '../models/claude';
 import { GeminiService } from '../models/gemini';
@@ -26,7 +27,8 @@ const logger = createLogger();
  * Agent configuration
  */
 export interface AgentConfig {
-  provider: 'openai' | 'anthropic' | 'google' | 'ollama';
+  provider: ModelProvider | 'local';
+  modelId?: string; // Specific model ID, or use provider
   role: string;
   priority?: number;
 }
@@ -79,7 +81,11 @@ export class MultiAgentOrchestrator {
       const startTime = Date.now();
 
       try {
-        const model = this.registry.getModel(agent.provider);
+        // Get model by ID if specified, otherwise by provider
+        const model = agent.modelId
+          ? this.registry.getModel(agent.modelId)
+          : this.registry.getModel(agent.provider);
+        
         const agentContext = {
           ...context,
           role: agent.role,

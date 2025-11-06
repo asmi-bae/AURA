@@ -16,7 +16,7 @@ export * from './rag';
 // MCP
 export * from './mcp';
 
-// Registry
+// Registry (includes ModelRegistry, Router, Cache, Pipeline, Orchestrator)
 export * from './registry';
 
 // Types

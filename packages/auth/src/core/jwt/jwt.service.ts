@@ -52,36 +52,34 @@ export class JWTService {
 
   sign(payload: Omit<JWTPayload, 'iat' | 'exp' | 'jti'>, options: TokenOptions = {}): string {
     const jti = crypto.randomBytes(16).toString('hex');
-    const tokenPayload: JWTPayload = {
+    const tokenPayload: any = {
       ...payload,
       jti,
-      issuer: options.issuer || this.issuer,
     };
 
-    return jwt.sign(tokenPayload, this.accessTokenSecret, {
+    return jwt.sign(tokenPayload as any, this.accessTokenSecret, {
       expiresIn: options.expiresIn || '15m', // Short-lived access tokens
       issuer: options.issuer || this.issuer,
       audience: options.audience,
       subject: options.subject || payload.userId,
       algorithm: this.algorithm,
-    });
+    } as any);
   }
 
   signRefreshToken(payload: Omit<JWTPayload, 'iat' | 'exp' | 'jti'>, options: TokenOptions = {}): string {
     const jti = crypto.randomBytes(16).toString('hex');
-    const tokenPayload: JWTPayload = {
+    const tokenPayload: any = {
       ...payload,
       jti,
-      issuer: options.issuer || this.issuer,
     };
 
-    return jwt.sign(tokenPayload, this.refreshTokenSecret, {
+    return jwt.sign(tokenPayload as any, this.refreshTokenSecret, {
       expiresIn: options.expiresIn || '7d', // Longer-lived refresh tokens
       issuer: options.issuer || this.issuer,
       audience: options.audience,
       subject: options.subject || payload.userId,
       algorithm: this.algorithm,
-    });
+    } as any);
   }
 
   generateTokenPair(payload: Omit<JWTPayload, 'iat' | 'exp' | 'jti'>, options: TokenOptions = {}): TokenPair {

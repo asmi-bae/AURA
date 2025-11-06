@@ -1,3 +1,4 @@
+// @ts-ignore - speakeasy doesn't have types
 import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import { createLogger } from '@aura/utils';

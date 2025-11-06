@@ -49,7 +49,7 @@ export class PineconeVectorStore implements VectorStore {
   }
 
   async addDocuments(
-    documents: { id: string; text: string; metadata?: Record<string, any> }[]
+    documents: { id: string; text: string; metadata?: Record<string, any>; embedding?: number[] }[]
   ): Promise<void> {
     try {
       // Generate embeddings and upsert to Pinecone
@@ -69,7 +69,7 @@ export class PineconeVectorStore implements VectorStore {
     }
   }
 
-  async search(query: string, topK: number = 5): Promise<VectorSearchResult[]> {
+  async search(query: string, topK: number = 5, queryEmbedding?: number[]): Promise<VectorSearchResult[]> {
     try {
       // Generate query embedding and search
       // const queryEmbedding = await this.generateEmbedding(query);

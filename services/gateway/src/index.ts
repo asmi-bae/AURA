@@ -58,8 +58,9 @@ app.get('/api/v1/status', async (request, reply) => {
 
 // WebSocket routes
 app.register(async (fastify) => {
-  fastify.get('/ws', { websocket: true }, (connection, req) => {
-    const socket = connection.socket;
+  fastify.get('/ws', { websocket: true }, (connection: any, req: any) => {
+    const socket = connection;
+    let user: any = null;
 
     // Authenticate WebSocket connection
     const token = req.url?.split('token=')[1];
@@ -70,13 +71,14 @@ app.register(async (fastify) => {
 
     try {
       const payload = jwtService.verify(token);
-      connection.socket.user = payload;
+      user = payload;
+      (socket as any).user = payload;
     } catch (error) {
       socket.close(1008, 'Invalid token');
       return;
     }
 
-    logger.info('WebSocket connection established', { userId: connection.socket.user?.userId });
+    logger.info('WebSocket connection established', { userId: user?.userId });
 
     socket.on('message', async (message: Buffer) => {
       try {
@@ -90,7 +92,7 @@ app.register(async (fastify) => {
 
           case 'subscribe':
             // Subscribe to Redis pub/sub channel
-            const channel = data.channel || `user:${connection.socket.user.userId}`;
+            const channel = data.channel || `user:${user?.userId}`;
             await subscribeToChannel(channel, socket);
             socket.send(JSON.stringify({ type: 'subscribed', channel }));
             break;
@@ -111,10 +113,10 @@ app.register(async (fastify) => {
     });
 
     socket.on('close', () => {
-      logger.info('WebSocket connection closed', { userId: connection.socket.user?.userId });
+      logger.info('WebSocket connection closed', { userId: user?.userId });
     });
 
-    socket.on('error', (error) => {
+    socket.on('error', (error: any) => {
       logger.error('WebSocket error', { error });
     });
   });

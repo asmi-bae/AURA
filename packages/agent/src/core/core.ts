@@ -438,7 +438,7 @@ export class AgentCore extends EventEmitter {
    */
   private async handleCapabilityRequest(payload: any): Promise<void> {
     // Check if capability is available
-    const capability = payload.capability;
+    const capability = payload.capability as keyof AgentCapabilities;
     if (!this.config.capabilities[capability]) {
       throw new Error(`Capability ${capability} not available`);
     }

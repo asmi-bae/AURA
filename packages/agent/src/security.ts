@@ -34,7 +34,7 @@ export class SecurityService {
 
     const dataBuffer = Buffer.isBuffer(data) ? data : Buffer.from(data, 'utf8');
     const encrypted = Buffer.concat([cipher.update(dataBuffer), cipher.final()]);
-    const authTag = cipher.getAuthTag();
+    const authTag = (cipher as any).getAuthTag();
 
     return { encrypted, iv, authTag };
   }
@@ -46,7 +46,7 @@ export class SecurityService {
     authTag: Buffer
   ): Buffer {
     const decipher = crypto.createDecipheriv(this.algorithm, key, iv);
-    decipher.setAuthTag(authTag);
+    (decipher as any).setAuthTag(authTag);
 
     return Buffer.concat([decipher.update(encrypted), decipher.final()]);
   }

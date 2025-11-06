@@ -62,7 +62,8 @@ export class VoiceStreamManager {
   stopStream(streamId: string): void {
     const device = this.devices.get(streamId);
     if (device) {
-      device.close();
+      // Device cleanup - mediasoup-client Device doesn't have close method
+      // Just remove from map
       this.devices.delete(streamId);
     }
   }

@@ -1,18 +1,12 @@
 import { z, ZodSchema, ZodError } from 'zod';
-
-export class ValidationError extends Error {
-  constructor(public errors: ZodError) {
-    super('Validation failed');
-    this.name = 'ValidationError';
-  }
-}
+import { ValidationError } from './errors';
 
 export function validate<T>(schema: ZodSchema<T>, data: unknown): T {
   try {
     return schema.parse(data);
   } catch (error) {
     if (error instanceof ZodError) {
-      throw new ValidationError(error);
+      throw new ValidationError('Validation failed', { errors: error.errors });
     }
     throw error;
   }

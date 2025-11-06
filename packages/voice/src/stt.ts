@@ -17,7 +17,7 @@ export class WhisperSTT implements STTProvider {
 
   async transcribe(audio: Buffer, options: STTOptions = {}): Promise<TranscriptionResult> {
     try {
-      const file = new File([audio], 'audio.wav', { type: 'audio/wav' });
+      const file = new File([audio as BlobPart], 'audio.wav', { type: 'audio/wav' });
       
       const response = await this.openai.audio.transcriptions.create({
         file,
@@ -92,7 +92,13 @@ export class STTService {
       // Buffer the stream and transcribe
       const chunks: Buffer[] = [];
       for await (const chunk of stream) {
-        chunks.push(chunk);
+        if (Buffer.isBuffer(chunk)) {
+          chunks.push(chunk);
+        } else if (typeof chunk === 'string') {
+          chunks.push(Buffer.from(chunk));
+        } else {
+          chunks.push(Buffer.from(chunk as any));
+        }
       }
       const audio = Buffer.concat(chunks);
       return this.transcribe(audio, options);
