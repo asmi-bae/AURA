@@ -1,379 +1,260 @@
-# AURA AI Integration Guide
+# AI Model Integration Guide
 
-## Quick Start
+This guide explains how to integrate new AI models into the AURA AI package.
 
-### 1. Initialize Model Registry
+## Architecture Overview
 
-```typescript
-import { ModelRegistry } from '@aura/ai';
+The AI package is organized into several layers:
 
-const registry = new ModelRegistry();
-
-// Register cloud models
-registry.registerModel({
-  provider: 'openai',
-  id: 'gpt-4-turbo',
-  // ... config
-});
-
-// Register local models
-registry.registerModel({
-  provider: 'ollama',
-  id: 'llama3-8b',
-  // ... config
-});
+```
+src/
+├── core/           # Core interfaces and base classes
+├── providers/      # AI model provider implementations
+├── adapters/       # Adapters for converting providers to standard interface
+├── services/       # High-level services (RAG, MCP)
+├── registry/       # Model registry, orchestration, routing
+├── config/         # Configuration management
+├── types/          # Shared types
+└── utils/          # Shared utilities
 ```
 
-### 2. Use in Agent
+## Adding a New AI Model Provider
 
-```typescript
-import { AgentCore } from '@aura/agent';
-import { ModelRegistry } from '@aura/ai';
+### Step 1: Create Provider Directory
 
-const registry = new ModelRegistry();
-// ... register models
+Create a new directory under `src/providers/`:
 
-const agent = new AgentCore({
-  // ... config
-  // Registry will be used by Base Thinking Engine
-});
-
-// Agent automatically uses registry for AI tasks
+```bash
+mkdir -p src/providers/your-provider
 ```
 
-### 3. Use in Workflows
+### Step 2: Implement Provider Service
+
+Create `src/providers/your-provider/provider.service.ts`:
 
 ```typescript
-import { AuraWorkflowEngine } from '@aura/core';
-import { ModelRegistry } from '@aura/ai';
+import { BaseModel, ModelMetadata, ChatMessage, ChatCompletionOptions, ChatCompletionResult } from '../../core/interfaces';
+import { createLogger } from '@aura/utils';
 
-const registry = new ModelRegistry();
-// ... register models
+const logger = createLogger();
 
-const engine = new AuraWorkflowEngine({
-  // ... config
-  modelRegistry: registry, // Optional
-});
-```
+export interface YourProviderConfig {
+  apiKey: string;
+  endpoint?: string;
+  model?: string;
+  // Add provider-specific config
+}
 
-## Integration Patterns
+export class YourProviderService extends BaseModel {
+  private client: any; // Your provider's SDK client
+  private config: YourProviderConfig;
 
-### Pattern 1: Direct Model Access
-
-```typescript
-import { GPTService } from '@aura/ai/models/gpt';
-
-const gpt = new GPTService({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
-const response = await gpt.chatCompletion([...]);
-```
-
-### Pattern 2: Registry-Based Routing
-
-```typescript
-import { ModelRegistry } from '@aura/ai';
-
-const registry = new ModelRegistry();
-// ... register models
-
-const model = registry.getBestModel({
-  taskType: 'reasoning',
-  preferLocal: false,
-});
-
-const response = await model.chatCompletion([...]);
-```
-
-### Pattern 3: Pipeline Execution
-
-```typescript
-import { ModelRegistry } from '@aura/ai';
-
-const result = await registry.executePipeline({
-  steps: [
-    { model: 'embedding', task: 'embed', input: '...' },
-    { model: 'rag', task: 'retrieve', input: '...' },
-    { model: 'reasoning', task: 'reason', input: '...' },
-  ],
-});
-```
-
-## Model Type Integration
-
-### Core Reasoning Models
-
-```typescript
-// Use GPT
-import { GPTService } from '@aura/ai/models/gpt';
-const gpt = new GPTService({ apiKey: '...' });
-
-// Use Claude
-import { ClaudeService } from '@aura/ai/models/claude';
-const claude = new ClaudeService({ apiKey: '...' });
-
-// Use Gemini
-import { GeminiService } from '@aura/ai/models/gemini';
-const gemini = new GeminiService({ apiKey: '...' });
-
-// Use Ollama (local)
-import { OllamaService } from '@aura/ai/models/ollama';
-const ollama = new OllamaService({ baseUrl: 'http://localhost:11434' });
-```
-
-### Embedding Models
-
-```typescript
-import { RAGService } from '@aura/ai/rag';
-
-const rag = new RAGService(apiKey, vectorStore);
-
-// Generate embedding
-const embedding = await rag.generateEmbedding('text');
-
-// Search
-const results = await rag.search('query', 5);
-```
-
-### RAG Models
-
-```typescript
-import { RAGService } from '@aura/ai/rag';
-import { PineconeVectorStore } from '@aura/ai/rag/vector-stores';
-
-const vectorStore = new PineconeVectorStore({
-  apiKey: '...',
-  environment: 'us-east-1',
-  indexName: 'aura-index',
-});
-
-const rag = new RAGService(apiKey, vectorStore);
-
-// Add documents
-await rag.addDocuments([
-  { id: '1', text: '...', metadata: {} },
-]);
-
-// Retrieve context
-const context = await rag.retrieveContext('query', 5);
-```
-
-### Multimodal Models
-
-```typescript
-// Vision with Gemini
-import { GeminiService } from '@aura/ai/models/gemini';
-
-const gemini = new GeminiService({ apiKey: '...' });
-
-// Chat with image
-const response = await gemini.chatWithImage(
-  'What is in this image?',
-  imageBuffer,
-);
-```
-
-### Voice Models
-
-```typescript
-import { STTService, TTSService } from '@aura/voice';
-
-// Speech to text
-const stt = new STTService();
-const text = await stt.transcribe(audioBuffer);
-
-// Text to speech
-const tts = new TTSService();
-const audio = await tts.synthesize('Hello world');
-```
-
-### Action Models (MCP)
-
-```typescript
-import { MCPService } from '@aura/ai/mcp';
-
-const mcp = new MCPService(redisConnection);
-
-// Register tool
-mcp.registerTool({
-  name: 'send_email',
-  description: 'Send an email',
-  parameters: { /* ... */ },
-  execute: async (args) => {
-    // Tool implementation
-  },
-});
-
-// Process message with tool calls
-const result = await mcp.processMessage(message);
-```
-
-## Agent Integration
-
-### Base Thinking Engine
-
-```typescript
-import { BaseThinkingEngine } from '@aura/agent/engine';
-
-const engine = new BaseThinkingEngine({
-  agentId: 'agent-1',
-  agentType: AgentType.AUTOMATION,
-  capabilities: { /* ... */ },
-  storage: localStorage,
-  telemetry: telemetry,
-  modelRegistry: registry, // AI model registry
-});
-
-// Engine automatically uses registry for AI tasks
-await engine.executeWorkflow(workflow);
-```
-
-### Agent with AI Models
-
-```typescript
-import { AgentCore } from '@aura/agent';
-import { ModelRegistry } from '@aura/ai';
-
-const registry = new ModelRegistry();
-// ... register models
-
-const agent = new AgentCore({
-  id: 'agent-1',
-  name: 'My Agent',
-  type: AgentType.INTERACTIVE_ASSISTANT,
-  gatewayUrl: 'https://gateway.aura.com',
-  capabilities: {
-    'screen-capture': true,
-    'voice-io': true,
-    'automation': true,
-  },
-  // Registry will be passed to thinking engine
-});
-
-// Agent handles AI model routing automatically
-await agent.start();
-```
-
-## Workflow Integration
-
-### AI Nodes in Workflows
-
-```typescript
-// Workflow with AI node
-const workflow = {
-  id: 'workflow-1',
-  name: 'Document Analysis',
-  nodes: [
-    {
-      id: 'node-1',
-      type: 'ai-reasoning',
-      model: 'auto', // Registry selects
-      input: {
-        messages: [
-          { role: 'user', content: 'Analyze this document' },
-        ],
+  constructor(config: YourProviderConfig) {
+    const metadata: ModelMetadata = {
+      provider: 'your-provider',
+      modelId: config.model || 'default-model',
+      name: 'Your Provider Model',
+      version: '1.0.0',
+      maxContextLength: 4096,
+      maxOutputLength: 2048,
+      capabilities: {
+        text: true,
+        vision: false,
+        audio: false,
+        functionCalling: false,
+        streaming: true,
+        embeddings: false,
+        multimodal: false,
       },
+      location: 'cloud',
+      offlineCapable: false,
+    };
+
+    super(metadata, config);
+    this.config = config;
+    // Initialize your provider's SDK
+    this.client = new YourProviderSDK(config);
+  }
+
+  async isAvailable(): Promise<boolean> {
+    try {
+      // Implement health check
+      return true;
+    } catch (error) {
+      logger.error('Provider health check failed', { error });
+      return false;
+    }
+  }
+
+  async chatCompletion(
+    messages: ChatMessage[],
+    options?: ChatCompletionOptions
+  ): Promise<ChatCompletionResult> {
+    this.validateMessages(messages);
+    const opts = this.normalizeOptions(options);
+
+    try {
+      // Call your provider's API
+      const response = await this.client.chat({
+        messages: this.formatMessages(messages),
+        model: opts.model,
+        temperature: opts.temperature,
+        maxTokens: opts.maxTokens,
+      });
+
+      // Convert response to standard format
+      return {
+        content: response.text,
+        model: opts.model || this.metadata.modelId,
+        finishReason: response.finishReason,
+        usage: response.usage ? {
+          promptTokens: response.usage.inputTokens,
+          completionTokens: response.usage.outputTokens,
+          totalTokens: response.usage.totalTokens,
+        } : undefined,
+      };
+    } catch (error) {
+      logger.error('Chat completion failed', { error });
+      throw error;
+    }
+  }
+
+  async *streamChatCompletion(
+    messages: ChatMessage[],
+    options?: ChatCompletionOptions
+  ): AsyncGenerator<any, void, unknown> {
+    // Implement streaming if supported
+    const result = await this.chatCompletion(messages, options);
+    yield { type: 'content', content: result.content, done: true };
+  }
+
+  private formatMessages(messages: ChatMessage[]): any[] {
+    // Format messages for your provider's API
+    return messages.map(msg => ({
+      role: msg.role,
+      content: typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content),
+    }));
+  }
+}
+```
+
+### Step 3: Create Index File
+
+Create `src/providers/your-provider/index.ts`:
+
+```typescript
+export * from './provider.service';
+export type { YourProviderConfig } from './provider.service';
+```
+
+### Step 4: Register Provider
+
+Add to `src/providers/index.ts`:
+
+```typescript
+export * from './your-provider';
+```
+
+### Step 5: Add Configuration
+
+Add provider configuration to `src/config/model-config.ts`:
+
+```typescript
+export const YOUR_PROVIDER_CONFIG = {
+  provider: 'your-provider',
+  models: {
+    'default-model': {
+      modelId: 'default-model',
+      name: 'Default Model',
+      maxContextLength: 4096,
+      maxOutputLength: 2048,
+      // ...
     },
-    {
-      id: 'node-2',
-      type: 'ai-embedding',
-      model: 'text-embedding-3-small',
-      input: {
-        text: '{{node-1.output}}',
-      },
-    },
-  ],
+  },
 };
 ```
 
-## Cross-Platform Considerations
+### Step 6: Register in Model Factory
 
-### Desktop (Agent)
+Update `src/core/model-factory.ts` to include your provider:
 
 ```typescript
-// Prefer local models for privacy
-const registry = new ModelRegistry({
-  preferLocal: true,
-  fallbackToCloud: true,
-});
+import { YourProviderService } from '../providers/your-provider';
 
-// Register local models
-registry.registerModel({
-  provider: 'ollama',
-  id: 'llama3-8b',
-  location: 'local',
-  offlineCapable: true,
-});
+export function createModel(provider: string, config: any): IModel {
+  switch (provider) {
+    case 'your-provider':
+      return new YourProviderService(config);
+    // ... other providers
+  }
+}
 ```
 
-### Web (Browser)
+## Using the New Provider
 
 ```typescript
-// Use cloud models only
-const registry = new ModelRegistry({
-  preferCloud: true,
-  allowLocal: false,
+import { YourProviderService } from '@aura/ai/providers/your-provider';
+import { ModelRegistry } from '@aura/ai/registry';
+
+// Create provider instance
+const provider = new YourProviderService({
+  apiKey: 'your-api-key',
+  model: 'default-model',
 });
 
-// Register cloud models
-registry.registerModel({
-  provider: 'openai',
-  id: 'gpt-4-turbo',
-  location: 'cloud',
-});
-```
+// Or use through registry
+const registry = new ModelRegistry();
+await registry.registerModel('your-provider', provider);
 
-### Server (Gateway)
-
-```typescript
-// Use both cloud and cached local models
-const registry = new ModelRegistry({
-  preferCloud: true,
-  fallbackToLocal: true,
-  cacheEnabled: true,
-});
+// Use the model
+const result = await provider.chatCompletion([
+  { role: 'user', content: 'Hello!' }
+]);
 ```
 
 ## Best Practices
 
-1. **Always use Registry**: Don't instantiate models directly, use the registry
-2. **Handle Failures**: Always have fallback models configured
-3. **Cache Embeddings**: Cache embeddings to reduce API costs
-4. **Monitor Costs**: Track usage and costs per model
-5. **Respect Privacy**: Use local models when privacy is required
-6. **Health Checks**: Monitor model health and availability
-7. **Version Pinning**: Pin model versions in production
+1. **Extend BaseModel**: Always extend `BaseModel` to get common functionality
+2. **Implement Interfaces**: Ensure your provider implements `IModel` interface
+3. **Error Handling**: Use utilities from `utils/error-handler.ts`
+4. **Retry Logic**: Use `utils/retry-handler.ts` for retryable operations
+5. **Rate Limiting**: Use `utils/rate-limiter.ts` for rate limiting
+6. **Logging**: Use `@aura/utils` logger for consistent logging
+7. **Type Safety**: Define provider-specific types in `types.ts`
+8. **Documentation**: Add README.md in provider directory
 
-## Troubleshooting
+## Testing
 
-### Model Not Found
-
-```typescript
-// Check if model is registered
-if (!registry.hasModel('gpt-4-turbo')) {
-  registry.registerModel({ /* ... */ });
-}
-```
-
-### Model Unavailable
+Create tests for your provider:
 
 ```typescript
-// Check health
-const health = await registry.getHealth('gpt-4-turbo');
-if (health.status !== 'healthy') {
-  // Use fallback
-  const fallback = registry.getFallback('gpt-4-turbo');
-}
-```
+import { YourProviderService } from './provider.service';
 
-### High Costs
+describe('YourProviderService', () => {
+  it('should create instance', () => {
+    const service = new YourProviderService({
+      apiKey: 'test-key',
+    });
+    expect(service).toBeDefined();
+  });
 
-```typescript
-// Use local models or cheaper alternatives
-registry.setPreferences({
-  costOptimization: true,
-  preferLocal: true,
+  it('should generate chat completion', async () => {
+    const service = new YourProviderService({
+      apiKey: 'test-key',
+    });
+    const result = await service.chatCompletion([
+      { role: 'user', content: 'Hello' }
+    ]);
+    expect(result.content).toBeDefined();
+  });
 });
 ```
 
+## Examples
+
+See existing providers for examples:
+- `providers/openai/` - OpenAI GPT implementation
+- `providers/anthropic/` - Anthropic Claude implementation
+- `providers/google/` - Google Gemini implementation
+- `providers/ollama/` - Ollama local models
+- `providers/custom/` - Template for custom providers

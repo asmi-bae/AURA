@@ -55,9 +55,10 @@ export interface BaseModelService {
 }
 
 /**
- * Model capabilities
+ * Model capabilities (legacy - use ModelCapabilities from core/interfaces)
+ * @deprecated Use ModelCapabilities from @aura/ai/core instead
  */
-export interface ModelCapabilities {
+export interface LegacyModelCapabilities {
   supportsStreaming: boolean;
   supportsFunctionCalling: boolean;
   supportsVision: boolean;

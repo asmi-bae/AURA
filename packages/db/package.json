@@ -7,9 +7,12 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "clean": "rimraf dist",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
     "db:migrate": "ts-node --esm src/scripts/run-migrations.ts",
     "db:revert": "ts-node --esm src/scripts/revert-migrations.ts",
-    "db:seed": "ts-node --esm src/seeds/seed-data.ts"
+    "db:seed": "ts-node --esm src/seeds/seed-data.ts",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "class-transformer": "^0.5.1",

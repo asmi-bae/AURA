@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged if available, otherwise run basic checks
+if command -v lint-staged >/dev/null 2>&1; then
+  npx lint-staged
+else
+  echo "Running pre-commit checks..."
+  pnpm run lint
+  pnpm run check-types
+fi
+

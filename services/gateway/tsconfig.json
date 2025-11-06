@@ -1,7 +1,8 @@
 {
-  "extends": "../../tsconfig.base.json",
+  "extends": "@aura/typescript-config/base.json",
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": "./src",
     "module": "ESNext",
     "target": "ES2022",
     "moduleResolution": "node",
@@ -10,4 +11,3 @@
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]
 }
-

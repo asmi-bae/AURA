@@ -55,15 +55,52 @@ app.post('/workflows/execute', async (req, res) => {
 app.get('/workflows/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
-    // TODO: Implement status retrieval from Redis/DB
-    res.json({ workflowId: id, status: 'running' });
+    
+    // Get job from queue
+    const { Queue } = await import('bullmq');
+    const queue = new Queue('workflow-execution', { connection: redis });
+    const job = await queue.getJob(id);
+    
+    if (!job) {
+      return res.status(404).json({ error: 'Workflow execution not found' });
+    }
+    
+    const state = await job.getState();
+    const status = {
+      workflowId: id,
+      jobId: job.id,
+      state,
+      progress: job.progress || 0,
+      returnvalue: job.returnvalue,
+      failedReason: job.failedReason,
+      timestamp: job.timestamp,
+      processedOn: job.processedOn,
+      finishedOn: job.finishedOn,
+    };
+    
+    res.json(status);
   } catch (error) {
     logger.error('Error getting workflow status', { error });
     res.status(500).json({ error: 'Failed to get workflow status' });
   }
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   logger.info(`Workflow engine service running on port ${port}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  server.close(() => {
+    process.exit(0);
+  });
 });
 

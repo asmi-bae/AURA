@@ -5,6 +5,9 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "clean": "rimraf dist",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -14,6 +17,8 @@
     "@octokit/rest": "^20.0.0"
   },
   "devDependencies": {
+    "@types/node": "^22.15.3",
+    "rimraf": "^5.0.5",
     "typescript": "^5.0.0"
   }
 }

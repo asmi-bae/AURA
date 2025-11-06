@@ -150,7 +150,22 @@ app.delete('/webhooks/:id', (req, res) => {
   }
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   logger.info(`Webhook handler service running on port ${port}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  logger.info('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  logger.info('SIGINT received, shutting down gracefully');
+  server.close(() => {
+    process.exit(0);
+  });
 });
 

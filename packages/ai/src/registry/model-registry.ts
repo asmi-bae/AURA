@@ -57,7 +57,7 @@ export interface ModelCost {
 /**
  * Model configuration
  */
-export interface ModelConfig {
+export interface RegistryModelConfig {
   // Provider identification
   provider: ModelProvider | 'local';
   id: string;
@@ -163,7 +163,7 @@ export interface CostMetrics {
  */
 export class ModelRegistry {
   private models: Map<string, GPTService | ClaudeService | GeminiService | OllamaService> = new Map();
-  private configs: Map<string, ModelConfig> = new Map();
+  private configs: Map<string, RegistryModelConfig> = new Map();
   private priorities: Map<string, number> = new Map();
   private enabled: Set<string> = new Set();
   private healthStatus: Map<string, ModelHealthStatus> = new Map();
@@ -180,7 +180,7 @@ export class ModelRegistry {
   /**
    * Register a model
    */
-  registerModel(config: ModelConfig): void {
+  registerModel(config: RegistryModelConfig): void {
     try {
       let model: GPTService | ClaudeService | GeminiService | OllamaService;
 
@@ -583,7 +583,7 @@ export class ModelRegistry {
   /**
    * Get model configuration
    */
-  getModelConfig(modelId: string): ModelConfig | undefined {
+  getModelConfig(modelId: string): RegistryModelConfig | undefined {
     return this.configs.get(modelId);
   }
 

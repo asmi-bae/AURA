@@ -1,11 +1,32 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
+  "globalDependencies": [
+    ".env",
+    ".env.local",
+    "tsconfig.base.json",
+    "turbo.json"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".env*",
+        "tsconfig.json",
+        "tsconfig.*.json",
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "app/**/*.ts",
+        "app/**/*.tsx"
+      ],
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "dist/**",
+        "build/**"
+      ],
+      "outputLogs": "new-only"
     },
     "lint": {
       "dependsOn": ["^lint"],
@@ -13,31 +34,52 @@
         ".env*",
         "**/*.{js,jsx,ts,tsx}",
         "**/.eslintrc*",
-        "**/eslint.config.{js,cjs,mjs}"
+        "**/eslint.config.{js,cjs,mjs}",
+        ".eslintignore"
       ],
-      "outputs": []
+      "outputs": [],
+      "outputLogs": "new-only"
     },
     "check-types": {
       "dependsOn": ["^check-types"],
       "inputs": [
         ".env*",
         "**/*.{ts,tsx}",
-        "**/tsconfig.json"
+        "**/tsconfig.json",
+        "**/tsconfig.*.json"
       ],
-      "outputs": []
+      "outputs": [],
+      "outputLogs": "new-only"
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "**/*.test.{ts,tsx,js,jsx}",
+        "**/*.spec.{ts,tsx,js,jsx}",
+        "jest.config.*",
+        "vitest.config.*"
+      ],
+      "outputs": ["coverage/**"],
+      "outputLogs": "new-only"
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "outputLogs": "stream"
     },
-    "#build-service": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": ["dist/**"]
-    },
-    "#dev-service": {
+    "format": {
       "cache": false,
-      "persistent": true
+      "inputs": [
+        "**/*.{ts,tsx,js,jsx,json,md}",
+        ".prettierrc*",
+        ".prettierignore"
+      ],
+      "outputs": []
+    },
+    "clean": {
+      "cache": false,
+      "outputs": []
     }
   }
 }
