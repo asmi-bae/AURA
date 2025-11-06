@@ -301,8 +301,11 @@ export class DocumentChunker {
     let size = 0;
 
     for (let i = sentences.length - 1; i >= 0 && size < overlapSize; i--) {
-      overlap.unshift(sentences[i]);
-      size += sentences[i].length;
+      const sentence = sentences[i];
+      if (sentence) {
+        overlap.unshift(sentence);
+        size += sentence.length;
+      }
     }
 
     return overlap;

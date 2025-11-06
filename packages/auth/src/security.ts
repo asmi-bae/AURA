@@ -42,7 +42,7 @@ export class SecurityService {
     });
   }
 
-  getSlowDown() {
+  getSlowDown(): ReturnType<typeof slowDown> {
     return slowDown({
       windowMs: this.config.slowDownWindow!,
       delayAfter: 50,

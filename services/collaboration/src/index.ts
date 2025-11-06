@@ -79,7 +79,16 @@ export class CollaborationServer {
           }
 
           // Transform operation against pending operations
-          const transformedOp = TextOperation.transform(operation, ...doc.operations);
+          // TextOperation.transform takes two operations and returns a tuple [op1, op2]
+          let transformedOp = operation;
+          for (let i = 0; i < doc.operations.length; i++) {
+            const pendingOp = doc.operations[i];
+            if (pendingOp) {
+              const transformResult = TextOperation.transform(transformedOp, pendingOp);
+              // transform returns [op1, op2] tuple
+              transformedOp = (transformResult as any)[0] as TextOperation;
+            }
+          }
           
           // Apply operation to document
           const newContent = transformedOp.apply(doc.text);
@@ -119,8 +128,11 @@ export class CollaborationServer {
         
         // Remove user from all presence lists
         Object.keys(this.users).forEach(workflowId => {
-          this.users[workflowId] = this.users[workflowId].filter(user => user.id !== socket.id);
-          this.io.to(workflowId).emit('presence_update', this.users[workflowId]);
+          const userList = this.users[workflowId];
+          if (userList) {
+            this.users[workflowId] = userList.filter(user => user.id !== socket.id);
+            this.io.to(workflowId).emit('presence_update', this.users[workflowId]);
+          }
         });
       });
     });
@@ -157,4 +169,4 @@ process.on('SIGINT', () => {
   process.exit(0);
 });
 
-export { CollaborationServer };
+// CollaborationServer is already exported above as a class

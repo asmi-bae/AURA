@@ -115,12 +115,16 @@ export class PipelineExecutor {
             const step = parallelSteps[i];
             const result = parallelResults[i];
 
+            if (!step || !result) {
+              continue;
+            }
+
             executedSteps.add(step.id);
             
             if (result.status === 'fulfilled') {
               stepResults.push(result.value);
               stepResultsMap.set(step.id, result.value.result);
-            } else {
+            } else if (result.status === 'rejected') {
               stepResults.push({
                 id: step.id,
                 success: false,
@@ -167,11 +171,13 @@ export class PipelineExecutor {
       const duration = Date.now() - startTime;
       const success = stepResults.every(r => r.success);
 
+      const lastStep = stepResults.length > 0 ? stepResults[stepResults.length - 1] : undefined;
+      const lastStepId = lastStep?.id;
       const pipelineResult: PipelineResult = {
         success,
         steps: stepResults,
         duration,
-        result: stepResultsMap.get(stepResults[stepResults.length - 1]?.id),
+        result: lastStepId ? stepResultsMap.get(lastStepId) : undefined,
       };
 
       logger.info('Pipeline executed', {

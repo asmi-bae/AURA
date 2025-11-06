@@ -138,7 +138,7 @@ export class AuraOrchestrator {
     return {
       queueLength: this.taskQueue.length,
       processingTasks: this.processingTasks.size,
-      availableAgents: this.modelRegistry.getAllModels(),
+      availableAgents: this.modelRegistry.getAllModels().map(m => m.constructor.name),
     };
   }
 }

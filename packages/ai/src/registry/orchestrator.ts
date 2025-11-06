@@ -130,10 +130,13 @@ export class MultiAgentOrchestrator {
         };
 
         // Update context memory
-        previousMemory.push(
-          { role: 'user', content: messages[messages.length - 1].content },
-          { role: 'assistant', content: response }
-        );
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage) {
+          previousMemory.push(
+            { role: 'user', content: lastMessage.content },
+            { role: 'assistant', content: response }
+          );
+        }
         // Keep only last N messages
         this.contextMemory.set(memoryKey, previousMemory.slice(-this.maxMemorySize));
 

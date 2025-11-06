@@ -159,7 +159,11 @@ export class GPTService {
         tool_choice: 'auto',
       });
 
-      const toolCalls = response.choices[0].message.tool_calls;
+      const choice = response.choices[0];
+      if (!choice || !choice.message) {
+        return null;
+      }
+      const toolCalls = choice.message.tool_calls;
       if (!toolCalls || toolCalls.length === 0) {
         return null;
       }
@@ -235,7 +239,11 @@ export class GPTService {
         input: text,
       });
 
-      return response.data[0].embedding;
+      const embedding = response.data[0]?.embedding;
+      if (!embedding) {
+        throw new Error('No embedding returned from OpenAI');
+      }
+      return embedding;
     } catch (error) {
       logger.error('Error generating GPT embedding', { error });
       throw error;

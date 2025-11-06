@@ -13,8 +13,10 @@ export type {
   ModelResponse,
   StreamChunk,
   BaseModelService,
-  ModelCapabilities,
 } from '../types';
+
+// Re-export ModelCapabilities from core/interfaces
+export type { ModelCapabilities } from '../core/interfaces';
 
 /**
  * Model-specific types that are not shared across the package

@@ -7,7 +7,8 @@
  * @module @aura/ai/adapters/custom
  */
 
-import { BaseModel, ModelMetadata, ChatMessage, ChatCompletionOptions, ChatCompletionResult, EmbeddingResult, StreamChunk } from '../../core/interfaces';
+import { BaseModel } from '../../core/base-model';
+import { ModelMetadata, ChatMessage, ChatCompletionOptions, ChatCompletionResult, EmbeddingResult, StreamChunk } from '../../core/interfaces';
 import { createLogger } from '@aura/utils';
 
 const logger = createLogger();
@@ -112,13 +113,13 @@ export class CustomModelAdapter extends BaseModel {
         throw new Error(`API request failed: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       // Convert response to standard format
       return {
-        content: data.choices[0].message.content,
-        model: opts.model || this.metadata.modelId,
-        finishReason: data.choices[0].finish_reason,
+        content: data.choices?.[0]?.message?.content || '',
+        model: opts.model || this.getMetadata().modelId,
+        finishReason: data.choices?.[0]?.finish_reason,
         usage: data.usage ? {
           promptTokens: data.usage.prompt_tokens,
           completionTokens: data.usage.completion_tokens,
@@ -186,7 +187,7 @@ export class CustomModelAdapter extends BaseModel {
           if (line.startsWith('data: ')) {
             const data = line.slice(6);
             if (data === '[DONE]') {
-              yield { type: 'done', done: true };
+              yield { content: '', done: true };
               return;
             }
 
@@ -195,7 +196,6 @@ export class CustomModelAdapter extends BaseModel {
               const content = parsed.choices[0]?.delta?.content || '';
               if (content) {
                 yield {
-                  type: 'content',
                   content,
                   done: false,
                 };

@@ -9,6 +9,9 @@
 
 import { StreamChunk } from '../types';
 
+// Re-export StreamChunk for convenience
+export type { StreamChunk };
+
 /**
  * Model capabilities
  */

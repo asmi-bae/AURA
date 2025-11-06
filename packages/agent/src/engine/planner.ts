@@ -60,6 +60,8 @@ export class Planner extends EventEmitter {
   private config: PlannerConfig;
   private logger = createLogger();
   private modelRegistry?: ModelRegistry;
+  private planCache: Map<string, ExecutionPlan> = new Map();
+  private cacheMaxSize = 100;
 
   constructor(config: PlannerConfig) {
     super();
@@ -75,9 +77,19 @@ export class Planner extends EventEmitter {
   }
 
   /**
-   * Plan a workflow
+   * Plan a workflow (with caching)
    */
   async plan(workflow: any): Promise<ExecutionPlan> {
+    // Create cache key from workflow
+    const cacheKey = `${workflow.id || workflow.name}:${JSON.stringify(workflow)}`;
+    
+    // Check cache first
+    if (this.planCache.has(cacheKey)) {
+      const cachedPlan = this.planCache.get(cacheKey)!;
+      logger.debug('Plan retrieved from cache', { planId: cachedPlan.id });
+      return { ...cachedPlan, id: `plan-${Date.now()}` }; // New ID for this execution
+    }
+
     const planId = `plan-${Date.now()}`;
     const goal = workflow.name || workflow.description || 'Execute workflow';
 
@@ -98,6 +110,15 @@ export class Planner extends EventEmitter {
       requiredCapabilities: this.identifyCapabilities(steps),
       riskLevel: this.assessRisk(steps),
     };
+
+    // Cache the plan (with size limit)
+    if (this.planCache.size >= this.cacheMaxSize) {
+      const firstKey = this.planCache.keys().next().value;
+      if (firstKey) {
+        this.planCache.delete(firstKey);
+      }
+    }
+    this.planCache.set(cacheKey, plan);
 
     this.emit('plan-created', plan);
     logger.info('Plan created', { planId, steps: steps.length });

@@ -6,7 +6,20 @@
  * @module @aura/ai/types
  */
 
-export type ModelProvider = 'openai' | 'anthropic' | 'google' | 'ollama';
+export type ModelProvider = 
+  | 'openai' 
+  | 'anthropic' 
+  | 'google' 
+  | 'ollama'
+  | 'mistral'
+  | 'cohere'
+  | 'groq'
+  | 'together'
+  | 'azure-openai'
+  | 'replicate'
+  | 'localai'
+  | 'perplexity'
+  | 'huggingface';
 
 /**
  * Base message interface for all AI models

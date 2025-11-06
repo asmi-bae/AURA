@@ -242,6 +242,13 @@ export class ModelRegistry {
   }
 
   /**
+   * Get all models
+   */
+  getAllModels(): Array<GPTService | ClaudeService | GeminiService | OllamaService> {
+    return Array.from(this.models.values());
+  }
+
+  /**
    * Get model by ID
    */
   getModel(modelId?: string): GPTService | ClaudeService | GeminiService | OllamaService {
@@ -457,7 +464,11 @@ export class ModelRegistry {
       return priorityA - priorityB;
     });
 
-    return this.models.get(sorted[0])!;
+    const firstModel = sorted[0];
+    if (!firstModel) {
+      throw new Error('No models available');
+    }
+    return this.models.get(firstModel)!;
   }
 
   /**

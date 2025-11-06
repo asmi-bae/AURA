@@ -5,6 +5,10 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
+    "clean": "rimraf dist",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src --ext .ts",
+    "dev": "ts-node --esm src/index.ts",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
@@ -19,6 +23,8 @@
   "devDependencies": {
     "@types/node": "^20.12.7",
     "@types/ws": "^8.5.10",
+    "rimraf": "^5.0.5",
+    "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }
 }

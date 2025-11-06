@@ -14,6 +14,7 @@
     "@aura/types": "workspace:*",
     "@aura/utils": "workspace:*",
     "@aura/ai": "workspace:*",
+    "@aura/db": "workspace:*",
     "@types/chokidar": "^2.1.7",
     "bullmq": "^4.18.3",
     "chokidar": "^4.0.3",
@@ -21,6 +22,7 @@
     "ioredis": "^5.8.2",
     "n8n-core": "^1.117.0",
     "n8n-workflow": "^1.115.0",
+    "typeorm": "^0.3.20",
     "vm2": "^3.10.0"
   },
   "devDependencies": {

@@ -31,8 +31,8 @@ export class WorkflowRepository {
   async findById(id: string): Promise<Workflow | null> {
     try {
       return await this.repository.findOne({
-        where: { id },
-        relations: ['createdBy'], // Include related entities if needed
+        where: { id } as any,
+        relations: ['owner'], // Include related entities if needed
       });
     } catch (error) {
       logger.error('Error finding workflow by ID', { error, id });
@@ -56,7 +56,7 @@ export class WorkflowRepository {
       const queryBuilder = this.repository.createQueryBuilder('workflow');
 
       if (active !== undefined) {
-        queryBuilder.where('workflow.active = :active', { active });
+        queryBuilder.where('workflow.status = :status', { status: active ? 'active' : 'draft' });
       }
 
       if (userId) {
@@ -98,8 +98,7 @@ export class WorkflowRepository {
     try {
       await this.repository.update(id, {
         ...updates,
-        updatedAt: new Date(),
-      });
+      } as any);
       const updated = await this.findById(id);
       if (!updated) {
         throw new Error(`Workflow ${id} not found`);
@@ -129,14 +128,14 @@ export class WorkflowRepository {
    * Activate workflow
    */
   async activate(id: string): Promise<Workflow> {
-    return this.update(id, { active: true });
+    return this.update(id, { status: 'active' });
   }
 
   /**
    * Deactivate workflow
    */
   async deactivate(id: string): Promise<Workflow> {
-    return this.update(id, { active: false });
+    return this.update(id, { status: 'draft' });
   }
 
   /**
@@ -145,7 +144,7 @@ export class WorkflowRepository {
   async findActive(): Promise<Workflow[]> {
     try {
       return await this.repository.find({
-        where: { active: true },
+        where: { status: 'active' },
         order: { updatedAt: 'DESC' },
       });
     } catch (error) {

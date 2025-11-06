@@ -507,11 +507,20 @@ export class AgentCore extends EventEmitter {
   }
 
   /**
-   * Update status
+   * Update status (optimized with debouncing)
    */
+  private lastStatusUpdate = 0;
+  private statusUpdateDebounceMs = 100; // Update at most every 100ms
+
   private updateStatus(): void {
+    const now = Date.now();
+    if (now - this.lastStatusUpdate < this.statusUpdateDebounceMs) {
+      return; // Skip update if too soon
+    }
+    this.lastStatusUpdate = now;
+
     if (this.startTime) {
-      this.status.uptime = Date.now() - this.startTime.getTime();
+      this.status.uptime = now - this.startTime.getTime();
     }
     this.status.lastSeen = new Date();
   }

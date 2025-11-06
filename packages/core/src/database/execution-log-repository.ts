@@ -32,7 +32,6 @@ export class ExecutionLogRepository {
     try {
       const log = this.repository.create({
         ...logData,
-        timestamp: new Date(),
       });
       const saved = await this.repository.save(log);
       logger.debug('Execution log created', { logId: saved.id });
@@ -48,8 +47,8 @@ export class ExecutionLogRepository {
    */
   async update(id: string, updates: Partial<Log>): Promise<Log> {
     try {
-      await this.repository.update(id, updates);
-      const updated = await this.repository.findOne({ where: { id } });
+      await this.repository.update(id, updates as any);
+      const updated = await this.repository.findOne({ where: { id } as any });
       if (!updated) {
         throw new Error(`Execution log ${id} not found`);
       }
@@ -70,10 +69,10 @@ export class ExecutionLogRepository {
     try {
       const { limit = 50, offset = 0 } = options;
       return await this.repository.find({
-        where: { workflowId },
+        where: { workflow: { id: workflowId } } as any,
         take: limit,
         skip: offset,
-        order: { timestamp: 'DESC' },
+        order: { createdAt: 'DESC' },
       });
     } catch (error) {
       logger.error('Error finding execution logs by workflow', { error, workflowId });
@@ -86,9 +85,10 @@ export class ExecutionLogRepository {
    */
   async findByExecutionId(executionId: string): Promise<Log[]> {
     try {
+      // Log entity doesn't have executionId, use metadata instead
       return await this.repository.find({
-        where: { executionId },
-        order: { timestamp: 'ASC' },
+        where: { metadata: { executionId } } as any,
+        order: { createdAt: 'ASC' },
       });
     } catch (error) {
       logger.error('Error finding execution logs by execution', { error, executionId });
@@ -107,20 +107,20 @@ export class ExecutionLogRepository {
   }> {
     try {
       const logs = await this.repository.find({
-        where: { workflowId },
+        where: { workflow: { id: workflowId } } as any,
       });
 
       const total = logs.length;
-      const success = logs.filter(log => log.level === 'info').length;
-      const failed = logs.filter(log => log.level === 'error').length;
+      const success = logs.filter((log: Log) => log.level === 'info').length;
+      const failed = logs.filter((log: Log) => log.level === 'error').length;
       
       // Calculate average duration from logs with duration data
       const durations = logs
-        .map(log => (log.data as any)?.duration)
-        .filter((d): d is number => typeof d === 'number');
+        .map((log: Log) => (log.metadata as any)?.duration)
+        .filter((d: any): d is number => typeof d === 'number');
       
       const averageDuration = durations.length > 0
-        ? durations.reduce((a, b) => a + b, 0) / durations.length
+        ? durations.reduce((a: number, b: number) => a + b, 0) / durations.length
         : 0;
 
       return {

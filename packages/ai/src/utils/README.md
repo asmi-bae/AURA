@@ -9,4 +9,3 @@ Shared utilities and helper functions for the AI package.
 - **error-handler.ts** - Handle AI provider errors
 - **retry-handler.ts** - Retry logic for API calls
 - **rate-limiter.ts** - Rate limiting utilities
-

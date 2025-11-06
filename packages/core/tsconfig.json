@@ -3,7 +3,11 @@
   "compilerOptions": {
     "outDir": "dist",
     "lib": ["ES2015"],
-    "types": ["node"]
+    "types": ["node"],
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true
   },
   "include": ["src/**/*"]
 }

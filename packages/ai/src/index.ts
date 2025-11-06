@@ -31,15 +31,15 @@ export * from './core';
 export * from './config';
 
 /**
- * Providers Module
- * Exports: All provider services (OpenAI, Anthropic, Google, Ollama, Custom)
- * - GPTService, GPTConfig
- * - ClaudeService, ClaudeConfig
- * - GeminiService, GeminiConfig
- * - OllamaService, OllamaConfig
- * - CustomModelAdapter, CustomModelConfig
+ * Models Module
+ * Exports: All model implementations (OpenAI, Anthropic, Google, Ollama, Mistral, etc.)
+ * - GPTModel, GPTService, GPTConfig
+ * - ClaudeModel, ClaudeService, ClaudeConfig
+ * - GeminiModel, GeminiService, GeminiConfig
+ * - OllamaModel, OllamaService, OllamaConfig
+ * - And all other model implementations
  */
-export * from './providers';
+export * from './models';
 
 /**
  * Adapters Module
@@ -95,11 +95,9 @@ export * from './utils';
 // ============================================================================
 
 /**
- * Legacy Models Export
- * Note: Models are now organized under providers/, but we keep this for compatibility
- * This is automatically handled through providers export above
+ * Note: All models are exported through ./models above
+ * Models include both Service classes (for direct API access) and Model classes (for IModel interface)
  */
-// export * from './models'; // Already exported via providers
 
 /**
  * Direct MCP and RAG Exports

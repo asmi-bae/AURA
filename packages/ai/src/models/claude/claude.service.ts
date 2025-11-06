@@ -93,7 +93,7 @@ export class ClaudeService {
       });
 
       const content = response.content[0];
-      if (content.type !== 'text') {
+      if (!content || content.type !== 'text') {
         throw new Error('Unexpected response type');
       }
 
@@ -102,7 +102,7 @@ export class ClaudeService {
         usage: response.usage,
       });
 
-      return content.text;
+      return 'text' in content ? content.text : '';
     } catch (error) {
       logger.error('Error in Claude chat completion', {
         error: error instanceof Error ? error.message : 'Unknown error',

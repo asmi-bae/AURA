@@ -4,37 +4,63 @@
  * Cross-platform desktop agent platform for AURA.
  * Provides automation, monitoring, and AI-driven capabilities.
  * 
+ * Dynamic exports - all modules are automatically exported through
+ * their respective index.ts files. Adding new modules to subdirectories
+ * will automatically make them available if the subdirectory's index.ts
+ * uses `export *`.
+ * 
  * @module @aura/agent
  */
 
-// Core (exports AgentConfig, AgentStatus from core)
+// ============================================================================
+// Core - Agent configuration, status, and main runtime
+// ============================================================================
 export * from './core';
 
-// Types (only export types not in core)
-export * from './types/agent-types';
-export * from './types/capabilities';
+// ============================================================================
+// Types - Agent types and capability definitions
+// ============================================================================
+// Export types explicitly to avoid conflicts with core exports
+export type { AgentCapabilities, CapabilityMetadata } from './types/capabilities';
+// Note: AgentConfig and AgentStatus are exported from ./core, not ./types
 
-// Engine
+// ============================================================================
+// Engine - Thinking engine, planner, executor, memory, routing
+// ============================================================================
 export * from './engine';
 
-// Capabilities
+// ============================================================================
+// Capabilities - Capability modules and registry
+// ============================================================================
 export * from './capabilities';
 
-// Security (exports KeyPair from security-manager, not security.ts)
+// ============================================================================
+// Security - Security manager and key management
+// ============================================================================
 export { SecurityManager, type KeyPair } from './security/security-manager';
 
-// Consent
+// ============================================================================
+// Consent - Consent management and policy enforcement
+// ============================================================================
 export * from './consent';
 
-// Communication
+// ============================================================================
+// Communication - Gateway communication and WebSocket management
+// ============================================================================
 export * from './communication';
 
-// Storage
+// ============================================================================
+// Storage - Local storage and persistence
+// ============================================================================
 export * from './storage';
 
-// Telemetry
+// ============================================================================
+// Telemetry - Metrics collection and monitoring
+// ============================================================================
 export * from './telemetry';
 
-// Legacy (for backward compatibility)
+// ============================================================================
+// Legacy - Backward compatibility exports
+// ============================================================================
 export * from './legacy/automation';
 export * from './legacy/screencapture';

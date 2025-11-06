@@ -121,7 +121,10 @@ export class RAGService {
         dimensions: options.dimensions,
       });
 
-      const embedding = response.data[0].embedding;
+      const embedding = response.data[0]?.embedding;
+      if (!embedding) {
+        throw new Error('No embedding returned from model');
+      }
       logger.debug('Embedding generated', { textLength: text.length, dimensions: embedding.length });
 
       return embedding;

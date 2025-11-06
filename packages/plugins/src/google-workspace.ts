@@ -8,7 +8,7 @@ export class GoogleWorkspacePlugin implements AuraPlugin {
 
   async init() {
     // Initialize Google Workspace connection
-    this.auth = new google.auth.GoogleAuth({
+    this.auth = new (google as any).auth.GoogleAuth({
       scopes: ['https://www.googleapis.com/auth/admin.directory.user']
     });
   }
@@ -19,7 +19,7 @@ export class GoogleWorkspacePlugin implements AuraPlugin {
     switch (action) {
       case 'createUser':
         const { email, password, name } = data;
-        const admin = google.admin('directory_v1');
+        const admin = (google as any).admin('directory_v1');
         const user = {
           primaryEmail: email,
           name: {

@@ -99,7 +99,7 @@ export class OllamaService {
         throw new Error(`Ollama API error: ${response.statusText} - ${errorText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       const content = data.message?.content || '';
 
       logger.debug('Ollama chat completion successful', {
@@ -206,7 +206,7 @@ export class OllamaService {
         throw new Error(`Failed to list models: ${response.statusText}`);
       }
 
-      const data = await response.json();
+      const data = await response.json() as any;
       return data.models?.map((m: any) => m.name) || [];
     } catch (error) {
       logger.error('Error listing Ollama models', { error });

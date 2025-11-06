@@ -15,7 +15,7 @@
  */
 
 import { createLogger } from '@aura/utils';
-import { ModelRegistry, ModelConfig, ModelPreferences, TaskRoutingOptions, CostMetrics } from './model-registry';
+import { ModelRegistry, RegistryModelConfig, ModelPreferences, TaskRoutingOptions, CostMetrics } from './model-registry';
 import { ModelRouter, RouterConfig, RoutingDecision } from './router';
 import { ResponseCache, CacheConfig } from './cache';
 import { PipelineExecutor, PipelineConfig, PipelineResult } from './pipeline';
@@ -101,7 +101,7 @@ export class RegistryManager {
   /**
    * Register a model
    */
-  registerModel(config: ModelConfig): void {
+  registerModel(config: RegistryModelConfig): void {
     this.registry.registerModel(config);
   }
 

@@ -40,9 +40,13 @@ export class AuraWorkflowEngine {
 
   async processWorkflow(job: { data: { workflowData: any; plugins: AuraPlugin[] } }) {
     const { workflowData, plugins } = job.data;
-    const workflow = new Workflow(workflowData);
+    // Workflow entity doesn't have a run method
+    // Use n8n-workflow instead
+    const { Workflow: N8nWorkflow } = await import('n8n-workflow');
+    const workflow = new N8nWorkflow(workflowData);
     
-    await workflow.run({
+    // Use n8n-workflow's execute method instead of run
+    await (workflow as any).execute({
       source: [{
         type: 'internal',
       }],

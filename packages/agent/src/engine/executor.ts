@@ -12,7 +12,7 @@ import { createLogger } from '@aura/utils';
 import { AgentCapabilities } from '../types/capabilities';
 import { ExecutionPlan, ExecutionStep } from './planner';
 import { LocalStorage } from '../storage/local-storage';
-import { CapabilityRegistry } from '../capabilities/capability-registry';
+import { CapabilityRegistry } from '../capabilities/core/capability-registry';
 
 const logger = createLogger();
 
@@ -92,14 +92,22 @@ export class Executor extends EventEmitter {
           throw new Error('Circular dependency or missing step');
         }
 
-        // Execute ready steps in parallel
-        const results = await Promise.allSettled(
-          readySteps.map(step => this.executeStep(step))
-        );
+        // Execute ready steps in parallel (optimized with concurrency limit)
+        const concurrencyLimit = 5; // Limit parallel executions
+        const results: PromiseSettledResult<any>[] = [];
+        
+        for (let i = 0; i < readySteps.length; i += concurrencyLimit) {
+          const batch = readySteps.slice(i, i + concurrencyLimit);
+          const batchResults = await Promise.allSettled(
+            batch.map(step => this.executeStep(step))
+          );
+          results.push(...batchResults);
+        }
 
-        for (let i = 0; i < readySteps.length; i++) {
-          const step = readySteps[i];
-          const result = results[i];
+        // Process results in order
+        let resultIndex = 0;
+        for (const step of readySteps) {
+          const result = results[resultIndex++];
 
           stepsExecuted++;
           executedSteps.add(step.id);
@@ -115,8 +123,10 @@ export class Executor extends EventEmitter {
           }
         }
 
-        // Remove executed steps
-        pendingSteps.splice(0, pendingSteps.length, ...pendingSteps.filter(s => !executedSteps.has(s.id)));
+        // Remove executed steps (optimized filter)
+        const remainingSteps = pendingSteps.filter(s => !executedSteps.has(s.id));
+        pendingSteps.length = 0;
+        pendingSteps.push(...remainingSteps);
       }
 
       const duration = Date.now() - startTime;
@@ -163,8 +173,8 @@ export class Executor extends EventEmitter {
 
       logger.debug('Executing step', { stepId: step.id, type: step.type });
 
-      // Get capability module for this step type
-      const capability = this.capabilityRegistry.getCapability(step.type);
+      // Get capability module for this step type (with lazy loading)
+      const capability = await this.capabilityRegistry.getCapability(step.type);
       if (!capability) {
         throw new Error(`Capability not found: ${step.type}`);
       }

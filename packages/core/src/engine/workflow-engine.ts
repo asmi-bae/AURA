@@ -19,13 +19,13 @@ import { Workflow as N8nWorkflow } from 'n8n-workflow';
 import { Queue, Worker, Job, QueueOptions, WorkerOptions } from 'bullmq';
 import Redis from 'ioredis';
 import { createLogger } from '@aura/utils';
-import { PluginLoader } from '../plugins/plugin-loader';
+import { PluginLoader } from '../plugin-loader';
 import { AuraPlugin } from '@aura/plugins';
 import { WorkflowCache } from '../cache/workflow-cache';
 import { ExecutionMetrics } from '../metrics/execution-metrics';
 import { WorkflowRepository } from '../database/workflow-repository';
 import { ExecutionLogRepository } from '../database/execution-log-repository';
-import { WorkflowExecution, Workflow } from '@aura/db';
+import { Workflow } from '@aura/db';
 import type { Connection } from 'typeorm';
 
 /**
@@ -96,7 +96,7 @@ export class AuraWorkflowEngine {
     // Set defaults and merge config
     this.config = {
       redisConnection: config.redisConnection,
-      dbConnection: config.dbConnection || null,
+      dbConnection: config.dbConnection,
       pluginsDir: config.pluginsDir || './plugins',
       watchPlugins: config.watchPlugins ?? true,
       queueConfig: config.queueConfig || {},
@@ -241,11 +241,15 @@ export class AuraWorkflowEngine {
       // Log to database if available
       if (this.executionLogRepo && job?.data?.workflowId) {
         await this.executionLogRepo.create({
-          workflowId: job.data.workflowId,
-          status: 'error',
-          error: err.message,
-          startedAt: new Date(job.timestamp),
-          stoppedAt: new Date(),
+          level: 'error',
+          message: err.message,
+          workflow: { id: job.data.workflowId } as any,
+          metadata: {
+            workflowId: job.data.workflowId,
+            status: 'error',
+            startedAt: new Date(job.timestamp),
+            stoppedAt: new Date(),
+          },
         });
       }
     });
@@ -325,11 +329,16 @@ export class AuraWorkflowEngine {
       let executionId: string | undefined;
       if (this.executionLogRepo) {
         const execution = await this.executionLogRepo.create({
-          workflowId,
-          status: 'running',
-          startedAt: new Date(),
+          level: 'info',
+          message: 'Workflow execution started',
+          workflow: { id: workflowId } as any,
+          metadata: {
+            workflowId,
+            status: 'running',
+            startedAt: new Date(),
+          },
         });
-        executionId = execution.id;
+        executionId = execution.id.toString();
       }
 
       // Add job to queue
@@ -379,8 +388,8 @@ export class AuraWorkflowEngine {
       // Create n8n workflow instance
       const workflow = new N8nWorkflow(workflowData);
 
-      // Execute workflow
-      const result = await workflow.run({
+      // Execute workflow using n8n-workflow's run method
+      const result = await (workflow as any).run({
         source: [
           {
             type: 'internal',
@@ -406,16 +415,20 @@ export class AuraWorkflowEngine {
       // Update execution log in database
       if (this.executionLogRepo && executionId) {
         await this.executionLogRepo.update(executionId, {
-          status: 'success',
-          stoppedAt: new Date(),
-          data: {
-            resultData: result.resultData,
-            nodesExecuted,
-            nodesSucceeded,
-            nodesFailed,
-            duration,
+          level: 'info',
+          message: 'Workflow execution completed successfully',
+          metadata: {
+            status: 'success',
+            stoppedAt: new Date(),
+            data: {
+              resultData: result.resultData,
+              nodesExecuted,
+              nodesSucceeded,
+              nodesFailed,
+              duration,
+            },
           },
-        });
+        } as any);
       }
 
       const executionResult: WorkflowExecutionResult = {
@@ -446,11 +459,15 @@ export class AuraWorkflowEngine {
       // Update execution log in database
       if (this.executionLogRepo && executionId) {
         await this.executionLogRepo.update(executionId, {
-          status: 'error',
-          stoppedAt: new Date(),
-          error: {
-            message: err.message,
-            stack: err.stack,
+          level: 'error',
+          message: err.message,
+          metadata: {
+            status: 'error',
+            stoppedAt: new Date(),
+            error: {
+              message: err.message,
+              stack: err.stack,
+            },
           },
         });
       }

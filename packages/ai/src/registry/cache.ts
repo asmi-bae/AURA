@@ -205,7 +205,10 @@ export class ResponseCache {
     // Evict 10% of cache
     const evictCount = Math.floor(this.config.memoryCacheSize * 0.1);
     for (let i = 0; i < evictCount && i < entries.length; i++) {
-      this.memoryCache.delete(entries[i][0]);
+      const entry = entries[i];
+      if (entry && entry[0]) {
+        this.memoryCache.delete(entry[0]);
+      }
     }
 
     logger.debug('Evicted oldest cache entries', { count: evictCount });

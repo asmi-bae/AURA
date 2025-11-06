@@ -76,7 +76,6 @@ export abstract class BaseModel implements IModel {
     
     // Yield result as single chunk
     yield {
-      type: 'content',
       content: result.content,
       done: true,
     };

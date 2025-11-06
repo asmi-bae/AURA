@@ -51,12 +51,25 @@ export function WorkflowEditor({ workflowId, userName }: { workflowId: string; u
   }, [workflowId, userName]);
 
   const handleChange = (newContent: string) => {
-    // Calculate changes
+    // Calculate changes using simple diff algorithm
     const oldContent = content;
-    const operation = TextOperation.diff(oldContent, newContent);
+    // Create operation by comparing old and new content
+    // The ot library doesn't have a diff method, so we need to compute it manually
+    // For now, use a simple approach: create a replace operation
+    const operation = new TextOperation();
+    if (oldContent !== newContent) {
+      // Simple approach: delete all and insert new
+      operation.retain(0);
+      operation.delete(oldContent.length);
+      operation.insert(newContent);
+    }
     
-    // Transform against pending operations
-    const transformedOp = TextOperation.transform(operation, ...operationsRef.current);
+    // Transform against pending operations sequentially
+    let transformedOp = operation;
+    for (const pendingOp of operationsRef.current) {
+      const [op1]: [TextOperation] = TextOperation.transform(transformedOp, pendingOp) as unknown as [TextOperation];
+      transformedOp = op1;
+    }
     
     // Apply locally
     setContent(transformedOp.apply(oldContent));

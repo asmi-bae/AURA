@@ -241,6 +241,10 @@ export class ModelRouter {
     reason: string;
   } {
     const best = candidates[0];
+    
+    if (!best) {
+      throw new Error('No candidates available for routing');
+    }
 
     let reason = `Selected ${best.config.name} based on `;
     if (options.costOptimization) {

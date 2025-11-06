@@ -39,6 +39,9 @@ export class CommunicationManager extends EventEmitter {
   private isConnected = false;
   private reconnectAttempts = 0;
   private reconnectTimer: NodeJS.Timeout | null = null;
+  private messageQueue: Array<{ type: string; payload: any }> = [];
+  private isProcessingQueue = false;
+  private connectionPromise: Promise<void> | null = null;
 
   constructor(config: CommunicationManagerConfig) {
     super();
@@ -46,7 +49,7 @@ export class CommunicationManager extends EventEmitter {
   }
 
   /**
-   * Connect to gateway
+   * Connect to gateway (with connection pooling and deduplication)
    */
   async connect(): Promise<void> {
     if (this.isConnected) {
@@ -54,6 +57,23 @@ export class CommunicationManager extends EventEmitter {
       return;
     }
 
+    // If already connecting, wait for that promise
+    if (this.connectionPromise) {
+      return this.connectionPromise;
+    }
+
+    this.connectionPromise = this._connect();
+    try {
+      await this.connectionPromise;
+    } finally {
+      this.connectionPromise = null;
+    }
+  }
+
+  /**
+   * Internal connect implementation
+   */
+  private async _connect(): Promise<void> {
     try {
       this.socket = io(this.config.gatewayUrl, {
         auth: {
@@ -78,6 +98,12 @@ export class CommunicationManager extends EventEmitter {
           this.isConnected = true;
           this.reconnectAttempts = 0;
           logger.info('Connected to gateway', { agentId: this.config.agentId });
+          
+          // Process queued messages
+          this.processMessageQueue().catch(error => {
+            logger.error('Error processing message queue', { error });
+          });
+          
           resolve();
         });
 
@@ -116,11 +142,21 @@ export class CommunicationManager extends EventEmitter {
   }
 
   /**
-   * Send message to gateway
+   * Send message to gateway (with queuing and batching)
    */
   async sendMessage(type: string, payload: any): Promise<void> {
     if (!this.isConnected || !this.socket) {
-      throw new Error('Not connected to gateway');
+      // Queue message if not connected
+      this.messageQueue.push({ type, payload });
+      logger.debug('Message queued (not connected)', { type });
+      
+      // Try to reconnect if not already connecting
+      if (!this.connectionPromise) {
+        this.connect().catch(error => {
+          logger.error('Failed to reconnect for queued message', { error });
+        });
+      }
+      return;
     }
 
     try {
@@ -133,7 +169,31 @@ export class CommunicationManager extends EventEmitter {
       logger.debug('Message sent to gateway', { type });
     } catch (error) {
       logger.error('Error sending message', { error, type });
+      // Queue message on error
+      this.messageQueue.push({ type, payload });
       throw error;
+    }
+  }
+
+  /**
+   * Process queued messages
+   */
+  private async processMessageQueue(): Promise<void> {
+    if (this.isProcessingQueue || this.messageQueue.length === 0) {
+      return;
+    }
+
+    this.isProcessingQueue = true;
+
+    try {
+      while (this.messageQueue.length > 0 && this.isConnected && this.socket) {
+        const message = this.messageQueue.shift();
+        if (message) {
+          await this.sendMessage(message.type, message.payload);
+        }
+      }
+    } finally {
+      this.isProcessingQueue = false;
     }
   }
 

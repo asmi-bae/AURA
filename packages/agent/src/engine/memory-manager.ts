@@ -45,6 +45,9 @@ export class MemoryManager {
   private logger = createLogger();
   private episodicMemory: MemoryEvent[] = [];
   private longTermMemory: MemoryEvent[] = [];
+  private memoryCache: Map<string, MemoryEvent[]> = new Map();
+  private lastSaveTime = 0;
+  private saveDebounceMs = 1000; // Save at most once per second
 
   constructor(config: MemoryManagerConfig) {
     this.config = config;
@@ -77,12 +80,13 @@ export class MemoryManager {
 
   /**
    * Record an event
+   * Optimized with debounced saving and efficient array operations
    */
   async recordEvent(event: MemoryEvent): Promise<void> {
-    // Add to episodic memory
+    // Add to episodic memory (use unshift for O(1) if we need recent-first)
     this.episodicMemory.push(event);
     
-    // Trim if needed
+    // Trim if needed (keep only recent events)
     if (this.episodicMemory.length > this.config.maxEpisodicMemory) {
       this.episodicMemory = this.episodicMemory.slice(-this.config.maxEpisodicMemory);
     }
@@ -97,31 +101,64 @@ export class MemoryManager {
       }
     }
 
-    // Save to storage
-    try {
-      await this.config.storage.set('memory:episodic', this.episodicMemory);
-      await this.config.storage.set('memory:longterm', this.longTermMemory);
-    } catch (error) {
-      logger.error('Failed to save memory to storage', { error });
+    // Invalidate cache
+    this.memoryCache.clear();
+
+    // Debounced save to storage (save at most once per second)
+    const now = Date.now();
+    if (now - this.lastSaveTime > this.saveDebounceMs) {
+      this.lastSaveTime = now;
+      // Save asynchronously without blocking
+      this.saveToStorage().catch(error => {
+        logger.error('Failed to save memory to storage', { error });
+      });
     }
 
     logger.debug('Event recorded', { type: event.type });
   }
 
   /**
-   * Get episodic memory
+   * Save memory to storage (async, non-blocking)
    */
-  getEpisodicMemory(limit?: number): MemoryEvent[] {
-    const memory = this.episodicMemory;
-    return limit ? memory.slice(-limit) : memory;
+  private async saveToStorage(): Promise<void> {
+    try {
+      // Save both in parallel
+      await Promise.all([
+        this.config.storage.set('memory:episodic', this.episodicMemory),
+        this.config.storage.set('memory:longterm', this.longTermMemory),
+      ]);
+    } catch (error) {
+      logger.error('Failed to save memory to storage', { error });
+      throw error;
+    }
   }
 
   /**
-   * Get long-term memory
+   * Get episodic memory (with caching)
+   */
+  getEpisodicMemory(limit?: number): MemoryEvent[] {
+    const cacheKey = `episodic:${limit || 'all'}`;
+    if (this.memoryCache.has(cacheKey)) {
+      return this.memoryCache.get(cacheKey)!;
+    }
+
+    const memory = limit ? this.episodicMemory.slice(-limit) : this.episodicMemory;
+    this.memoryCache.set(cacheKey, memory);
+    return memory;
+  }
+
+  /**
+   * Get long-term memory (with caching)
    */
   getLongTermMemory(limit?: number): MemoryEvent[] {
-    const memory = this.longTermMemory;
-    return limit ? memory.slice(-limit) : memory;
+    const cacheKey = `longterm:${limit || 'all'}`;
+    if (this.memoryCache.has(cacheKey)) {
+      return this.memoryCache.get(cacheKey)!;
+    }
+
+    const memory = limit ? this.longTermMemory.slice(-limit) : this.longTermMemory;
+    this.memoryCache.set(cacheKey, memory);
+    return memory;
   }
 
   /**

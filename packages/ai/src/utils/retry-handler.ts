@@ -70,7 +70,7 @@ export async function retryWithBackoff<T>(
       );
       
       logger.warn(`Retry attempt ${attempt + 1}/${opts.maxRetries} after ${delay}ms`, {
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
       });
       
       await sleep(delay);

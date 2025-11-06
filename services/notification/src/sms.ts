@@ -37,11 +37,14 @@ export class SMSNotifier {
       recipients.map(({ to, message }) => this.send(to, message))
     );
 
-    return results.map((result, index) => ({
-      recipient: recipients[index].to,
-      success: result.status === 'fulfilled',
-      error: result.status === 'rejected' ? result.reason : undefined,
-    }));
+    return results.map((result, index) => {
+      const recipient = recipients[index];
+      return {
+        recipient: recipient?.to || 'unknown',
+        success: result.status === 'fulfilled',
+        error: result.status === 'rejected' ? result.reason : undefined,
+      };
+    });
   }
 }
 
