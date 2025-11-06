@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: collaboration
+  namespace: aura
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: collaboration
+  template:
+    metadata:
+      labels:
+        app: collaboration
+    spec:
+      containers:
+      - name: collaboration
+        image: aura/collaboration:latest
+        ports:
+        - containerPort: 3005
+        env:
+        - name: PORT
+          value: "3005"
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "100m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: collaboration
+  namespace: aura
+spec:
+  selector:
+    app: collaboration
+  ports:
+  - port: 3005
+    targetPort: 3005
+  type: LoadBalancer
+

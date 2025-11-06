@@ -1,0 +1,54 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/core/package.json ./packages/core/
+COPY packages/db/package.json ./packages/db/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/types/package.json ./packages/types/
+COPY services/scheduler/package.json ./services/scheduler/
+
+RUN npm install -g pnpm@10.0.0
+RUN pnpm install --frozen-lockfile
+
+COPY packages/core ./packages/core
+COPY packages/db ./packages/db
+COPY packages/utils ./packages/utils
+COPY packages/types ./packages/types
+COPY services/scheduler ./services/scheduler
+COPY tsconfig.base.json ./
+
+RUN pnpm --filter @aura/core build
+RUN pnpm --filter @aura/db build
+RUN pnpm --filter @aura/utils build
+RUN pnpm --filter @aura/types build
+RUN pnpm --filter @aura/scheduler build
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/core/package.json ./packages/core/
+COPY packages/db/package.json ./packages/db/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/types/package.json ./packages/types/
+COPY services/scheduler/package.json ./services/scheduler/
+
+RUN npm install -g pnpm@10.0.0
+RUN pnpm install --frozen-lockfile --prod
+
+COPY --from=builder /app/packages/core/dist ./packages/core/dist
+COPY --from=builder /app/packages/core/package.json ./packages/core/
+COPY --from=builder /app/packages/db/dist ./packages/db/dist
+COPY --from=builder /app/packages/db/package.json ./packages/db/
+COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
+COPY --from=builder /app/packages/utils/package.json ./packages/utils/
+COPY --from=builder /app/packages/types/dist ./packages/types/dist
+COPY --from=builder /app/packages/types/package.json ./packages/types/
+COPY --from=builder /app/services/scheduler/dist ./services/scheduler/dist
+COPY --from=builder /app/services/scheduler/package.json ./services/scheduler/
+
+CMD ["node", "services/scheduler/dist/index.js"]
+

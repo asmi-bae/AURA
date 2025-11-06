@@ -1,0 +1,55 @@
+{
+  "name": "@aura/real-time-agent",
+  "version": "0.0.1",
+  "main": "main.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "build:win": "electron-builder --win",
+    "build:mac": "electron-builder --mac",
+    "build:linux": "electron-builder --linux",
+    "lint:security": "electron-builder --check"
+  },
+  "dependencies": {
+    "@aura/utils": "workspace:*",
+    "@aura/types": "workspace:*",
+    "electron": "^30.5.1",
+    "socket.io-client": "^4.7.2",
+    "robotjs": "^0.6.0",
+    "sqlite3": "^5.1.7",
+    "lowdb": "^7.0.0",
+    "better-sqlite3": "^11.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "electron-builder": "^24.13.3",
+    "typescript": "^5.4.5"
+  },
+  "build": {
+    "appId": "com.aura.realtimeagent",
+    "productName": "AURA Real-Time Agent",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "preload.js",
+      "index.html",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icon.png"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icon.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "icon.png"
+    }
+  }
+}

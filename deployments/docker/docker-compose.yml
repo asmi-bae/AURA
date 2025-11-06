@@ -1,0 +1,131 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: aura
+      POSTGRES_USER: aura
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-securepassword}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aura"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  workflow-engine:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.workflow-engine
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DB_TYPE: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: aura
+      DB_PASS: ${DB_PASSWORD:-securepassword}
+      DB_NAME: aura
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  webhook-handler:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.webhook-handler
+    ports:
+      - "3002:3002"
+    environment:
+      PORT: 3002
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DB_TYPE: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: aura
+      DB_PASS: ${DB_PASSWORD:-securepassword}
+      DB_NAME: aura
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  scheduler:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.scheduler
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      DB_TYPE: postgres
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: aura
+      DB_PASS: ${DB_PASSWORD:-securepassword}
+      DB_NAME: aura
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  notification:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.notification
+    ports:
+      - "3004:3004"
+    environment:
+      PORT: 3004
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SLACK_TOKEN: ${SLACK_TOKEN:-}
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID:-}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN:-}
+      TWILIO_FROM: ${TWILIO_FROM:-}
+      FIREBASE_SERVICE_ACCOUNT: ${FIREBASE_SERVICE_ACCOUNT:-}
+    restart: unless-stopped
+
+  collaboration:
+    build:
+      context: ../..
+      dockerfile: deployments/docker/Dockerfile.collaboration
+    ports:
+      - "3005:3005"
+    environment:
+      PORT: 3005
+    restart: unless-stopped
+
+volumes:
+  redis-data:
+  postgres-data:
+

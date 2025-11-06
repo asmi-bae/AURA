@@ -1,0 +1,82 @@
+/**
+ * AI Package Types
+ * 
+ * Shared types and interfaces for the AI package.
+ * 
+ * @module @aura/ai/types
+ */
+
+export type ModelProvider = 
+  | 'openai' 
+  | 'anthropic' 
+  | 'google' 
+  | 'ollama'
+  | 'mistral'
+  | 'cohere'
+  | 'groq'
+  | 'together'
+  | 'azure-openai'
+  | 'replicate'
+  | 'localai'
+  | 'perplexity'
+  | 'huggingface';
+
+/**
+ * Base message interface for all AI models
+ */
+export interface AIMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+/**
+ * Model response interface
+ */
+export interface ModelResponse {
+  content: string;
+  model: string;
+  usage?: {
+    promptTokens?: number;
+    completionTokens?: number;
+    totalTokens?: number;
+  };
+  finishReason?: string;
+}
+
+/**
+ * Streaming chunk interface
+ */
+export interface StreamChunk {
+  content: string;
+  done: boolean;
+}
+
+/**
+ * Base model interface that all model services should implement
+ */
+export interface BaseModelService {
+  chatCompletion(
+    messages: AIMessage[],
+    options?: any
+  ): Promise<string>;
+
+  streamChatCompletion?(
+    messages: AIMessage[],
+    onChunk: (chunk: string) => void,
+    options?: any
+  ): Promise<void>;
+}
+
+/**
+ * Model capabilities (legacy - use ModelCapabilities from core/interfaces)
+ * @deprecated Use ModelCapabilities from @aura/ai/core instead
+ */
+export interface LegacyModelCapabilities {
+  supportsStreaming: boolean;
+  supportsFunctionCalling: boolean;
+  supportsVision: boolean;
+  supportsMultimodal: boolean;
+  maxContextLength: number;
+  maxOutputLength: number;
+}
+

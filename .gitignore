@@ -4,6 +4,8 @@
 node_modules
 .pnp
 .pnp.js
+.pnpm-store
+.pnpm-debug.log*
 
 # Local env files
 .env
@@ -11,28 +13,92 @@ node_modules
 .env.development.local
 .env.test.local
 .env.production.local
+.env*.local
 
 # Testing
 coverage
+.nyc_output
+*.lcov
+.jest-cache
 
 # Turbo
 .turbo
+.turbo-cache
 
 # Vercel
 .vercel
 
 # Build Outputs
-.next/
+next/
 out/
 build
 dist
-
+*.tsbuildinfo
 
 # Debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
 
 # Misc
 .DS_Store
 *.pem
+*.log
+*.swp
+*.swo
+*~
+.cache
+
+# Editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+logs
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Electron
+dist-electron/
+out-electron/
+
+# Husky
+.husky/_
+
+# TypeScript
+*.tsbuildinfo
+
+# Package manager locks (keep pnpm-lock.yaml)
+package-lock.json
+yarn.lock
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Kubernetes
+*.kubeconfig
+
+# IDE
+*.iml
+.vscode-test/
+.windsurf/
