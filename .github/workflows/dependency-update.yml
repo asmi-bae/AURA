@@ -1,0 +1,83 @@
+name: Dependency Update
+
+on:
+  schedule:
+    # Check for updates weekly on Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch:
+
+jobs:
+  update-dependencies:
+    name: Update Dependencies
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+      
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: '10.0.0'
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'pnpm'
+      
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Check for outdated packages
+        id: check
+        run: |
+          pnpm install
+          pnpm outdated --format=json > outdated.json || true
+          
+          if [ -s outdated.json ]; then
+            echo "has_updates=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_updates=false" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create update branch
+        if: steps.check.outputs.has_updates == 'true'
+        run: |
+          BRANCH_NAME="deps/update-$(date +%Y%m%d)"
+          git checkout -b $BRANCH_NAME
+          echo "BRANCH_NAME=$BRANCH_NAME" >> $GITHUB_ENV
+      
+      - name: Update dependencies
+        if: steps.check.outputs.has_updates == 'true'
+        run: |
+          pnpm update --latest --recursive
+          pnpm install
+      
+      - name: Create pull request
+        if: steps.check.outputs.has_updates == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ env.BRANCH_NAME }}
+          title: 'chore: update dependencies'
+          body: |
+            ## Dependency Updates
+            
+            This PR updates outdated dependencies.
+            
+            - Updated packages using `pnpm update --latest`
+            - Please review and test before merging
+            
+            ### Changes
+            - See package.json and pnpm-lock.yaml for details
+          commit-message: 'chore: update dependencies'
+          labels: |
+            dependencies
+            automated
+

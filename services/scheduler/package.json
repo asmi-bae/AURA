@@ -16,13 +16,16 @@
     "@aura/db": "workspace:*",
     "@aura/utils": "workspace:*",
     "@aura/types": "workspace:*",
+    "@aura/config": "workspace:*",
     "bullmq": "^4.18.3",
     "node-cron": "^3.0.3",
-    "ioredis": "^5.8.2"
+    "ioredis": "^5.8.2",
+    "express": "^4.18.2"
   },
   "devDependencies": {
     "@types/node": "^20.12.7",
     "@types/node-cron": "^3.0.11",
+    "@types/express": "^4.17.21",
     "rimraf": "^5.0.5",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"

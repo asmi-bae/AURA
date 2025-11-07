@@ -1,0 +1,44 @@
+.nav {
+  width: 250px;
+  min-height: 100vh;
+  background: #1a1a1a;
+  border-right: 1px solid #333;
+  padding: 1rem 0;
+}
+
+.header {
+  padding: 0 1.5rem 1.5rem;
+  border-bottom: 1px solid #333;
+  margin-bottom: 1rem;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #fff;
+  text-decoration: none;
+}
+
+.navList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.navLink {
+  display: block;
+  color: #ccc;
+  text-decoration: none;
+  padding: 0.75rem 1.5rem;
+  transition: background-color 0.2s;
+}
+
+.navLink:hover {
+  background-color: #333;
+  color: #fff;
+}
+
+.navLink.active {
+  background-color: #444;
+  color: #fff;
+}
