@@ -1,0 +1,85 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/core/package.json ./packages/core/
+COPY packages/auth/package.json ./packages/auth/
+COPY packages/db/package.json ./packages/db/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/types/package.json ./packages/types/
+COPY packages/common/package.json ./packages/common/
+COPY packages/config/package.json ./packages/config/
+COPY services/auth/package.json ./services/auth/
+
+# Install pnpm
+RUN npm install -g pnpm@10.0.0
+
+# Install dependencies
+RUN pnpm install --frozen-lockfile
+
+# Copy source files
+COPY packages/core ./packages/core
+COPY packages/auth ./packages/auth
+COPY packages/db ./packages/db
+COPY packages/utils ./packages/utils
+COPY packages/types ./packages/types
+COPY packages/common ./packages/common
+COPY packages/config ./packages/config
+COPY services/auth ./services/auth
+COPY tsconfig.base.json ./
+
+# Build
+RUN pnpm --filter @aura/core build
+RUN pnpm --filter @aura/auth build
+RUN pnpm --filter @aura/db build
+RUN pnpm --filter @aura/utils build
+RUN pnpm --filter @aura/types build
+RUN pnpm --filter @aura/common build
+RUN pnpm --filter @aura/config build
+RUN pnpm --filter @aura/auth-service build
+
+# Production image
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/core/package.json ./packages/core/
+COPY packages/auth/package.json ./packages/auth/
+COPY packages/db/package.json ./packages/db/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/types/package.json ./packages/types/
+COPY packages/common/package.json ./packages/common/
+COPY packages/config/package.json ./packages/config/
+COPY services/auth/package.json ./services/auth/
+
+# Install pnpm
+RUN npm install -g pnpm@10.0.0
+
+# Install production dependencies only
+RUN pnpm install --frozen-lockfile --prod
+
+# Copy built files
+COPY --from=builder /app/packages/core/dist ./packages/core/dist
+COPY --from=builder /app/packages/core/package.json ./packages/core/
+COPY --from=builder /app/packages/auth/dist ./packages/auth/dist
+COPY --from=builder /app/packages/auth/package.json ./packages/auth/
+COPY --from=builder /app/packages/db/dist ./packages/db/dist
+COPY --from=builder /app/packages/db/package.json ./packages/db/
+COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
+COPY --from=builder /app/packages/utils/package.json ./packages/utils/
+COPY --from=builder /app/packages/types/dist ./packages/types/dist
+COPY --from=builder /app/packages/types/package.json ./packages/types/
+COPY --from=builder /app/packages/common/dist ./packages/common/dist
+COPY --from=builder /app/packages/common/package.json ./packages/common/
+COPY --from=builder /app/packages/config/dist ./packages/config/dist
+COPY --from=builder /app/packages/config/package.json ./packages/config/
+COPY --from=builder /app/services/auth/dist ./services/auth/dist
+COPY --from=builder /app/services/auth/package.json ./services/auth/
+
+EXPOSE 3013
+
+CMD ["node", "services/auth/dist/index.js"]

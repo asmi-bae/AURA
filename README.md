@@ -298,7 +298,18 @@ pnpm db:revert
 pnpm db:seed
 ```
 
+## Documentation
+
+- **[Development Guide](./DEVELOPMENT.md)** - Setup and development workflow
+- **[Architecture](./ARCHITECTURE.md)** - System architecture and design
+- **[Deployment Guide](./DEPLOYMENT.md)** - Deployment instructions
+- **[Contributing](./CONTRIBUTING.md)** - Contribution guidelines
+- **[Changelog](./CHANGELOG.md)** - Version history and changes
+- **[Implementation Status](./IMPLEMENTATION_STATUS.md)** - Historical implementation status
+
 ## Contributing
+
+We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md) for details.
 
 1. Fork the repository
 2. Create a feature branch
@@ -308,8 +319,11 @@ pnpm db:seed
 
 ## License
 
-MIT
+This project is licensed under the MIT License - see the [LICENSE.md](./LICENSE.md) file for details.
 
 ## Support
 
-For issues and questions, please open an issue on GitHub.
+For issues and questions:
+- Check the [documentation](./DEVELOPMENT.md)
+- Search existing [GitHub Issues](https://github.com/your-org/aura/issues)
+- Open a new issue if needed

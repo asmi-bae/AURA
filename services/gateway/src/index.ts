@@ -5,6 +5,13 @@ import rateLimit from '@fastify/rate-limit';
 import { createLogger } from '@aura/utils';
 import { JWTService } from '@aura/auth';
 import Redis from 'ioredis';
+import { authRoutes } from './routes/auth.routes';
+import { userRoutes } from './routes/user.routes';
+import { agentRoutes } from './routes/agent.routes';
+import { pluginRoutes } from './routes/plugin.routes';
+import { createAuthMiddleware } from './middlewares/auth';
+import { createRateLimitMiddleware } from './middlewares/rateLimit';
+import { errorHandler, notFoundHandler } from './middlewares/errorHandler';
 
 const logger = createLogger();
 const app = Fastify({ logger: false });
@@ -50,20 +57,33 @@ async function startServer() {
 
     await app.register(websocket);
 
-    // Authentication middleware
-    const authenticate = async (request: any, reply: any) => {
-      try {
-        const token = request.headers.authorization?.replace('Bearer ', '');
-        if (!token) {
-          return reply.code(401).send({ error: 'Unauthorized' });
+    // Register error handlers
+    app.setErrorHandler(errorHandler);
+    app.setNotFoundHandler(notFoundHandler);
+
+    // Register routes
+    await app.register(authRoutes, { prefix: '/api/v1' });
+    await app.register(userRoutes, { prefix: '/api/v1' });
+    await app.register(agentRoutes, { prefix: '/api/v1' });
+    await app.register(pluginRoutes, { prefix: '/api/v1' });
+
+    // Protected routes (require authentication)
+    app.addHook('onRequest', async (request, reply) => {
+      // Skip auth for public routes
+      const publicRoutes = ['/health', '/api/v1/auth/login', '/api/v1/auth/google', '/api/v1/auth/github'];
+      if (publicRoutes.some(route => request.url.startsWith(route))) {
+        return;
         }
 
-        const payload = jwtService.verify(token);
-        request.user = payload;
-      } catch (error) {
-        return reply.code(401).send({ error: 'Invalid token' });
-      }
-    };
+      // Apply authentication middleware
+      await createAuthMiddleware(jwtService)(request as any, reply);
+    });
+
+    // Apply rate limiting to all routes
+    app.addHook('onRequest', createRateLimitMiddleware(redis, {
+      windowMs: 60000,
+      max: 100,
+    }));
 
     // Health check
     app.get('/health', async (request, reply) => {

@@ -1,102 +1,107 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
+"use client";
+
+import { useEffect, useState } from "react";
 import styles from "./page.module.css";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
+const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || "http://localhost:3000";
 
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
+export default function Dashboard() {
+  const [stats, setStats] = useState({
+    agents: 0,
+    workflows: 0,
+    plugins: 0,
+    executions: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchStats();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      // Fetch stats from analytics service
+      const [agentsRes, workflowsRes, pluginsRes] = await Promise.all([
+        fetch(`${GATEWAY_URL}/api/v1/agents`).catch(() => null),
+        fetch(`${GATEWAY_URL}/api/v1/workflows`).catch(() => null),
+        fetch(`${GATEWAY_URL}/api/v1/plugins`).catch(() => null),
+      ]);
+
+      const agentsData = agentsRes ? await agentsRes.json().catch(() => ({})) : {};
+      const workflowsData = workflowsRes ? await workflowsRes.json().catch(() => ({})) : {};
+      const pluginsData = pluginsRes ? await pluginsRes.json().catch(() => ({})) : {};
+
+      setStats({
+        agents: agentsData.total || 0,
+        workflows: workflowsData.total || 0,
+        plugins: pluginsData.total || 0,
+        executions: 0,
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <h1>Dashboard</h1>
+        <p>Welcome to AURA - AI Automation Platform</p>
+      </div>
 
-export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+      {loading ? (
+        <div className={styles.loading}>Loading...</div>
+      ) : (
+        <div className={styles.statsGrid}>
+          <div className={styles.statCard}>
+            <h3>Agents</h3>
+            <p className={styles.statValue}>{stats.agents}</p>
+            <p className={styles.statLabel}>Active agents</p>
+          </div>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.com/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+          <div className={styles.statCard}>
+            <h3>Workflows</h3>
+            <p className={styles.statValue}>{stats.workflows}</p>
+            <p className={styles.statLabel}>Configured workflows</p>
+          </div>
+
+          <div className={styles.statCard}>
+            <h3>Plugins</h3>
+            <p className={styles.statValue}>{stats.plugins}</p>
+            <p className={styles.statLabel}>Installed plugins</p>
+          </div>
+
+          <div className={styles.statCard}>
+            <h3>Executions</h3>
+            <p className={styles.statValue}>{stats.executions}</p>
+            <p className={styles.statLabel}>Total executions</p>
+          </div>
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.com?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.com →
-        </a>
-      </footer>
+      )}
+
+      <div className={styles.sections}>
+        <div className={styles.section}>
+          <h2>Quick Actions</h2>
+          <div className={styles.actionGrid}>
+            <a href="/workflows/new" className={styles.actionCard}>
+              Create Workflow
+            </a>
+            <a href="/agents/new" className={styles.actionCard}>
+              Create Agent
+            </a>
+            <a href="/plugins/install" className={styles.actionCard}>
+              Install Plugin
+            </a>
+          </div>
+        </div>
+
+        <div className={styles.section}>
+          <h2>Recent Activity</h2>
+          <p className={styles.emptyState}>No recent activity</p>
+        </div>
+      </div>
     </div>
   );
 }

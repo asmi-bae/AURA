@@ -23,13 +23,15 @@
     "n8n-core": "^1.117.0",
     "n8n-workflow": "^1.115.0",
     "typeorm": "^0.3.20",
-    "vm2": "^3.10.0"
+    "vm2": "^3.10.0",
+    "node-cron": "^3.0.3"
   },
   "devDependencies": {
     "@types/express": "^5.0.5",
     "@types/form-data": "^2.5.2",
     "@types/nock": "^11.1.0",
     "@types/node": "^22.15.3",
+    "@types/node-cron": "^3.0.11",
     "rimraf": "^5.0.5",
     "typescript": "^5.0.0"
   }

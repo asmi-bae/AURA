@@ -1,0 +1,67 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/core/package.json ./packages/core/
+COPY packages/agent/package.json ./packages/agent/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/types/package.json ./packages/types/
+COPY packages/common/package.json ./packages/common/
+COPY packages/config/package.json ./packages/config/
+COPY services/agent/package.json ./services/agent/
+
+RUN npm install -g pnpm@10.0.0
+RUN pnpm install --frozen-lockfile
+
+COPY packages/core ./packages/core
+COPY packages/agent ./packages/agent
+COPY packages/utils ./packages/utils
+COPY packages/types ./packages/types
+COPY packages/common ./packages/common
+COPY packages/config ./packages/config
+COPY services/agent ./services/agent
+COPY tsconfig.base.json ./
+
+RUN pnpm --filter @aura/core build
+RUN pnpm --filter @aura/agent build
+RUN pnpm --filter @aura/utils build
+RUN pnpm --filter @aura/types build
+RUN pnpm --filter @aura/common build
+RUN pnpm --filter @aura/config build
+RUN pnpm --filter @aura/agent-service build
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/core/package.json ./packages/core/
+COPY packages/agent/package.json ./packages/agent/
+COPY packages/utils/package.json ./packages/utils/
+COPY packages/types/package.json ./packages/types/
+COPY packages/common/package.json ./packages/common/
+COPY packages/config/package.json ./packages/config/
+COPY services/agent/package.json ./services/agent/
+
+RUN npm install -g pnpm@10.0.0
+RUN pnpm install --frozen-lockfile --prod
+
+COPY --from=builder /app/packages/core/dist ./packages/core/dist
+COPY --from=builder /app/packages/core/package.json ./packages/core/
+COPY --from=builder /app/packages/agent/dist ./packages/agent/dist
+COPY --from=builder /app/packages/agent/package.json ./packages/agent/
+COPY --from=builder /app/packages/utils/dist ./packages/utils/dist
+COPY --from=builder /app/packages/utils/package.json ./packages/utils/
+COPY --from=builder /app/packages/types/dist ./packages/types/dist
+COPY --from=builder /app/packages/types/package.json ./packages/types/
+COPY --from=builder /app/packages/common/dist ./packages/common/dist
+COPY --from=builder /app/packages/common/package.json ./packages/common/
+COPY --from=builder /app/packages/config/dist ./packages/config/dist
+COPY --from=builder /app/packages/config/package.json ./packages/config/
+COPY --from=builder /app/services/agent/dist ./services/agent/dist
+COPY --from=builder /app/services/agent/package.json ./services/agent/
+
+EXPOSE 3006
+
+CMD ["node", "services/agent/dist/index.js"]

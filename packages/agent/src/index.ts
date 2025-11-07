@@ -22,6 +22,7 @@ export * from './core';
 // ============================================================================
 // Export types explicitly to avoid conflicts with core exports
 export type { AgentCapabilities, CapabilityMetadata } from './types/capabilities';
+export { AgentType, type AgentTypeConfig, AGENT_TYPE_CONFIGS, getAgentTypeConfig, getAllAgentTypes } from './types/agent-types';
 // Note: AgentConfig and AgentStatus are exported from ./core, not ./types
 
 // ============================================================================

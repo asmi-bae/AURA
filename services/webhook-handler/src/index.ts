@@ -1,6 +1,6 @@
 import express from 'express';
 import crypto from 'crypto';
-import { AuraWorkflowEngine } from '@aura/core';
+import { AuraWorkflowEngine, ServiceRegistration } from '@aura/core';
 import { initializeDataSource } from '@aura/db';
 import { createLogger } from '@aura/utils';
 import Redis from 'ioredis';
@@ -13,6 +13,17 @@ app.use(express.json({ verify: (req, res, buf) => {
   (req as any).rawBody = buf;
 }}));
 
+// Service registration
+const serviceRegistration = new ServiceRegistration({
+  id: 'webhook-handler-service',
+  name: 'Webhook Handler Service',
+  version: '1.0.0',
+  url: `http://${process.env.SERVICE_HOST || 'localhost'}:${port}`,
+  metadata: {
+    description: 'Webhook receiver and processor service',
+  },
+});
+
 // Initialize Redis connection
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
@@ -21,12 +32,22 @@ const redis = new Redis({
 });
 
 // Initialize workflow engine
-const workflowEngine = new AuraWorkflowEngine(redis);
+const workflowEngine = new AuraWorkflowEngine({
+  redisConnection: redis,
+  enableCache: true,
+  enableMetrics: true,
+});
 
 // Initialize database
-await initializeDataSource();
+const dbConnection = await initializeDataSource();
 
-// Start worker
+// Update workflow engine with database connection
+if (dbConnection && (dbConnection as any).isInitialized) {
+  (workflowEngine as any).config.dbConnection = dbConnection;
+}
+
+// Initialize and start worker
+await workflowEngine.init();
 await workflowEngine.startWorker();
 
 // Webhook registry
@@ -94,19 +115,23 @@ app.post('/webhooks/register', async (req, res) => {
         }
 
         // Trigger workflow execution
-        await workflowEngine.executeWorkflow({
-          id: webhookConfig.workflowId,
-          trigger: {
-            type: 'webhook',
-            data: {
-              method: req.method,
-              headers: req.headers,
-              body: req.body,
-              query: req.query,
-              params: req.params,
+        await workflowEngine.executeWorkflow(
+          webhookConfig.workflowId,
+          {
+            trigger: {
+              type: 'webhook',
+              data: {
+                method: req.method,
+                headers: req.headers,
+                body: req.body,
+                query: req.query,
+                params: req.params,
+              },
             },
           },
-        });
+          0, // priority
+          0  // delay
+        );
 
         res.json({ success: true, message: 'Webhook received and workflow triggered' });
       } catch (error) {
@@ -151,20 +176,26 @@ app.delete('/webhooks/:id', (req, res) => {
   }
 });
 
-const server = app.listen(port, () => {
+const server = app.listen(port, async () => {
   logger.info(`Webhook handler service running on port ${port}`);
+  
+  // Register with registry service
+  await serviceRegistration.register();
+  serviceRegistration.setupGracefulShutdown();
 });
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
+  await serviceRegistration.unregister();
   server.close(() => {
     process.exit(0);
   });
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully');
+  await serviceRegistration.unregister();
   server.close(() => {
     process.exit(0);
   });
